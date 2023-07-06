@@ -1,0 +1,1081 @@
+---
+title: "Comparison of Zika Virus Transmission From Squirrel Monkeys to Aedes albopictus (Hanley et al. 2023) and Dengue Virus Transmission From Humans to Aedes aegypti (Nguyen et al. 2013, Duong et al. 2015)"
+author: "Helene Cecilia"
+format: html
+---
+
+```{r}
+#| label: load-packages
+#| echo: false
+
+rm(list=ls())
+
+## Loading Packages  ------------------
+library(tidyverse)
+library(bbmle) # for mle2, parnames
+library(emdbook) # for dbetabinom
+library(ggplot2)
+library(nls2)
+library(mgcv) # for rmvn, gam
+library(scales) # for alpha function
+library(funrar) # for matrix_to_stack
+library(readxl)
+library(patchwork)
+library(tmvtnorm) # for truncated multi variate normal rtmvnorm
+library(investr) # for predFit
+library(DHARMa)
+library(effects)
+library(nlstools)
+library(bbmle) # for mle2, parnames
+
+## Set Work Directory ------------------------------------------------------
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
+getwd()
+
+## Load source files ------------------
+source('Dose_Response_Functions.R')
+
+## -------------------------------
+# set.seed(3)
+tolerance = 1e-7 
+
+save_path <- "../output/result_files/transmission_to_mosquitoes/zika_sylvatic_vs_dengue_literature/"
+```
+
+
+```{r}
+#| label: data-loading-and-formatting
+#| echo: false
+
+# ZIKV data formatting -----
+df_tmp <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+                   sep = "\t", dec = ".")
+df_tmp <- df_tmp[,c("ID","Sex","Final.Treatment","Day.Post.Infection","Viremia.deduced",
+                    "Number.of.mosquitoes.that.engorged.AND.survived.to.titer",
+                    "Number.of.mosquitoes.with.detectable.body.infection",
+                    "Number.of.mosquitoes.with.detectable.leg.infection")]
+
+colnames(df_tmp) <- c("ID","Sex","Final.Treatment","Day.Post.Infection","Viremia_pfu_corr",
+                      "fed_surv_mosq_transm","body_mosq_transm_raw", "leg_mosq_transm_raw")
+
+# selection :
+# remove control individuals
+# do not remove viremia 0 : some transmitted to mosquitoes !!
+# keep all with non NA body_mosq_transm_raw and leg_mosq_transm_raw (but keep 0)
+
+select_body <- df_tmp[!is.na(df_tmp$Viremia_pfu_corr) & !is.na(df_tmp$body_mosq_transm_raw) & df_tmp$Final.Treatment != "Control",]
+select_leg <- df_tmp[!is.na(df_tmp$Viremia_pfu_corr) & !is.na(df_tmp$leg_mosq_transm_raw) & df_tmp$Final.Treatment != "Control",]
+
+# log transform viremia
+select_body$Viremia_log10_corr <- log10(select_body$Viremia_pfu_corr + 1)
+select_leg$Viremia_log10_corr <- log10(select_leg$Viremia_pfu_corr + 1)
+
+zikv_body <- select_body[,c("ID","Viremia_log10_corr","fed_surv_mosq_transm","body_mosq_transm_raw")]
+zikv_leg <- select_leg[,c("ID","Viremia_log10_corr","fed_surv_mosq_transm","leg_mosq_transm_raw")]
+
+colnames(zikv_body) <- c("ID","log_V","N","k")
+zikv_body$paper <- "zikv"
+zikv_body$disease_class <- "unknown"
+zikv_body$serotype <- NA
+
+colnames(zikv_leg) <- c("ID","log_V","N","k")
+zikv_leg$paper <- "zikv"
+zikv_leg$disease_class <- "unknown"
+zikv_leg$serotype <- NA
+
+# Exclude 0,0 points which are too constraining for fitting
+zikv_body <- filter(zikv_body, !(log_V == 0 & k == 0))
+zikv_leg <- filter(zikv_leg, !(log_V == 0 & k == 0))
+
+# Data from the literature  ------
+
+duong_df <- read.csv("../data/literature/Duong.csv") 
+duong_df$paper <- "duong"
+duong_df$plasma_viremia <- NULL
+colnames(duong_df) <- c("ID","disease_class","serotype","N","k","log_V","paper")
+
+
+nguyen_df <- read.csv("../data/literature/Nguyen.csv")
+summary(as.factor(nguyen_df$Serotype)) # all serotypes
+nguyen_df$paper <- "nguyen"
+nguyen_df$disease_class <- "unknown"
+colnames(nguyen_df) <- c("ID","serotype","log_V","N","k","paper","disease_class")
+nguyen_df <- filter(nguyen_df, !(log_V == 0 & k == 0)) # 0 observations removed
+
+```
+
+```{r}
+#| label: dose-resp-fitting-BODY
+#| echo: false
+
+# Find good starting values : done only once -----
+# (for ZIKV then used for others)
+# these starting values were hard coded in the appropriate optim functions in Dose_Response_Functions.R
+
+# pred_log <- LogFunction(seq(0,10,0.1), log_beta0 = 5, beta1 = 0.8) #ok
+# plot(zikv_data$log_V, zikv_data$k/zikv_data$N)
+# lines(seq(0,10,0.1), pred_log)
+
+# pred_log <- Ferguson(seq(0,10,0.1), theta0 = 5, theta1 = 3) #ok
+# plot(zikv_data$log_V, zikv_data$k/zikv_data$N)
+# lines(seq(0,10,0.1), pred_log)
+
+# pred_log <- Hill(seq(0,10,0.1), gamma0 = 137, gamma1 = 3.2) #ok
+# plot(zikv_data$log_V, zikv_data$k/zikv_data$N)
+# lines(seq(0,10,0.1), pred_log)
+
+# Find best functional form for dose-response curve -----
+# ZIKV -----
+
+dose_resp_function_selection(zikv_body,"sylv_ZIKV_squirrel_BODY")
+# AICc are printed at the end of the chunk and not in the console (not very convenient, sorry)
+
+#             AICc        df
+# binom_Log	82.31582	2		
+# betabinom_Log	79.57606	3		: SELECTED
+# binom_Ferg	82.56010	2		
+# betabinom_Ferg	80.53789	3		
+# binom_Hill	82.50344	2		
+# betabinom_Hill	80.85316	3
+
+
+# If you want to choose between a betabinom and a binom one,
+# you can use likelihood ratio test because they're nested models
+# https://stats.stackexchange.com/questions/407154/can-log-likelihood-be-used-to-compare-a-binomial-model-to-its-beta-binomial-eq
+zikv_binom_Log <- readRDS(paste0(save_path,"binom_Log_sylv_ZIKV_squirrel_BODY.rds"))
+zikv_betabinom_Log <- readRDS(paste0(save_path,"betabinom_Log_sylv_ZIKV_squirrel_BODY.rds"))
+
+confint(zikv_betabinom_Log, method = "quad")
+# overdispersion CI contains zero, which justifies doing the LRT
+
+lrt(LL0 = zikv_binom_Log@details$value,
+    LL1 = zikv_betabinom_Log@details$value,
+    df0 = 2, df1 = 3)
+# select betabinom
+# $L01
+# [1] 5.368336
+# 
+# $df
+# [1] 1
+# 
+# $`p-value`
+# [1] 0.02050553
+
+# Check how it looks
+pred <- LogFunction(seq(0.1,8.15, length.out = 100),
+                    zikv_betabinom_Log@coef[1],
+                    zikv_betabinom_Log@coef[2])
+ggplot() + geom_point(aes(x = zikv_body$log_V,
+                          y = zikv_body$k/zikv_body$N)) +
+  geom_line(aes(x = seq(0.1,8.15, length.out = 100),
+                y = pred))
+
+zikv_betabinom_Log@coef
+confint(zikv_betabinom_Log, method = "quad")
+# log_beta0 5.00 [4.07 ; 5.94]
+# beta1 0.70 [0.36 ; 1.04]
+# overdispersion 8.58 [-3.36 ; 20.53] contains 0
+exp(zikv_betabinom_Log@coef)
+exp(confint(zikv_betabinom_Log, method = "quad")) # to transform log.beta0
+# beta0 149.0 [58.64 ; 378.6] 
+
+# Nguyen -----
+# solution is a parameter to decide how we handle small values. It doesn't have a big impact
+# DENV1
+nguyen_pfu1_sol2 <- dose_resp_conversion_and_selection(data = nguyen_df,
+                                                       serotype = 1,
+                                                       solution = 2,
+                                                       filename = "DENV1_Nguyen_BODY")
+
+# binom_Log	137.1043	2		
+# betabinom_Log	107.6264	3	: SELECTED
+# binom_Ferg	141.4691	2		
+# betabinom_Ferg	108.0963	3		
+# binom_Hill	156.6133	2		
+# betabinom_Hill	113.2086	3
+
+# DENV2 
+nguyen_pfu2_sol2 <- dose_resp_conversion_and_selection(data = nguyen_df,
+                                                       serotype = 2,
+                                                       solution = 2,
+                                                       filename = "DENV2_Nguyen_BODY")
+
+# binom_Log	92.90815	2		
+# betabinom_Log	69.71317	3		: SELECTED
+# binom_Ferg	93.72020	2		
+# betabinom_Ferg	69.98977	3		
+# binom_Hill	99.11092	2		
+# betabinom_Hill	70.28101	3
+
+# DENV3 
+nguyen_pfu3_sol2 <- dose_resp_conversion_and_selection(data = nguyen_df,
+                                                       serotype = 3,
+                                                       solution = 2,
+                                                       filename = "DENV3_Nguyen_BODY")
+
+# binom_Log	135.75777	2		
+# betabinom_Log	76.38505	3	: SELECTED
+# binom_Ferg	134.43301	2		
+# betabinom_Ferg	76.50524	3		
+# binom_Hill	133.36817	2		
+# betabinom_Hill	76.55301	3
+
+# DENV4 
+nguyen_pfu4_sol2 <- dose_resp_conversion_and_selection(data = nguyen_df,
+                                                       serotype = 4,
+                                                       solution = 2,
+                                                       filename = "DENV4_Nguyen_BODY")
+
+# binom_Log	460.4540	2		
+# betabinom_Log	235.7943	3		: SELECTED
+# binom_Ferg	461.0496	2		
+# betabinom_Ferg	235.9748	3		
+# binom_Hill	461.6207	2		
+# betabinom_Hill	236.0666	3
+
+```
+
+```{r}
+#| label: dose-resp-fitting-LEG
+#| echo: false
+
+# Find best functional form for dose-response curve -----
+# ZIKV -----
+
+dose_resp_function_selection(zikv_leg,"sylv_ZIKV_squirrel_LEG")
+
+# binom_Log	101.74254	2		
+# betabinom_Log	77.50173	3		: SELECTED
+# binom_Ferg	105.47797	2		
+# betabinom_Ferg	78.85349	3		
+# binom_Hill	113.60097	2		
+# betabinom_Hill	81.60184	3	
+
+zikv_betabinom_Log <- readRDS(paste0(save_path,"betabinom_Log_sylv_ZIKV_squirrel_LEG.rds"))
+
+# Check how it looks
+pred <- LogFunction(seq(0.1,8.15, length.out = 100),
+                    zikv_betabinom_Log@coef[1],
+                    zikv_betabinom_Log@coef[2])
+ggplot() + geom_point(aes(x = zikv_leg$log_V,
+                          y = zikv_leg$k/zikv_leg$N)) +
+  geom_line(aes(x = seq(0.1,8.15, length.out = 100),
+                y = pred))
+
+coef(zikv_betabinom_Log)
+confint(zikv_betabinom_Log, method = "quad")
+# 2.53 [1.95 ; 3.12] # log_beta0
+# 1.12 [0.59 ; 1.64] # beta1
+# 2.31 [-0.02 ; 4.65] # overdispersion, contains 0
+exp(coef(zikv_betabinom_Log)) # to transform log.beta0
+exp(confint(zikv_betabinom_Log, method = "quad")) # to transform log.beta0
+# 12.57 [7.00 ; 22.58] # beta0
+
+# Duong -----
+duong_pfu1_sol2 <- dose_resp_conversion_and_selection(data = duong_df,
+                                                      serotype = 1,
+                                                      solution = 2,
+                                                      filename = "DENV1_Duong_LEG")
+
+#                       AICc df
+# binom_Log         785.8197  2
+# betabinom_Log     200.6688  3 : SELECTED
+####### something probably went wrong with the others ########
+# binom_Ferg     400726.8703  2
+# betabinom_Ferg 400178.1329  3
+# binom_Hill     400736.9442  2
+# betabinom_Hill 400180.3824  3
+
+duong_pfu2_sol2 <- dose_resp_conversion_and_selection(data = duong_df,
+                                                      serotype = 2,
+                                                      solution = 2,
+                                                      filename = "DENV2_Duong_LEG")
+#                       AICc df
+# binom_Log         311.2971  2
+# betabinom_Log     152.9813  3 : SELECTED
+# binom_Ferg     400345.0092  2
+# betabinom_Ferg 600141.5704  3
+# binom_Hill     600311.6137  2
+# betabinom_Hill 600141.7483  3
+
+duong_pfu4_sol2 <- dose_resp_conversion_and_selection(data = duong_df,
+                                                      serotype = 4,
+                                                      solution = 2,
+                                                      filename = "DENV4_Duong_LEG")
+#                     AICc df
+# binom_Log      166.64203  2
+# betabinom_Log   88.22499  3
+# binom_Ferg     164.75226  2
+# betabinom_Ferg  88.04619  3
+# binom_Hill     166.66921  2
+# betabinom_Hill  87.98409  3 : SELECTED
+
+```
+
+
+```{r}
+#| label: suppl-plot-fit-and-data-BODY
+#| echo: false
+
+nguyen_pfu1_sol2 <- conversion_and_small_values_correction(nguyen_df,
+                                                          serotype = 1,
+                                                          solution = 2)
+nguyen_pfu2_sol2 <- conversion_and_small_values_correction(nguyen_df,
+                                                          serotype = 2,
+                                                          solution = 2)
+nguyen_pfu3_sol2 <- conversion_and_small_values_correction(nguyen_df,
+                                                          serotype = 3,
+                                                          solution = 2)
+nguyen_pfu4_sol2 <- conversion_and_small_values_correction(nguyen_df,
+                                                          serotype = 4,
+                                                          solution = 2) 
+
+best1_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV1_Nguyen_BODY.rds"))
+best2_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV2_Nguyen_BODY.rds"))
+best3_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV3_Nguyen_BODY.rds"))
+best4_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV4_Nguyen_BODY.rds"))
+
+best_zikv_body <- readRDS(paste0(save_path,"betabinom_Log_sylv_ZIKV_squirrel_BODY.rds"))
+
+# Plot
+predframe <- seq(0,10,length.out = 60)
+
+fit1_nguyen <- LogFunction(log_V = predframe,
+                          log_beta0 = as.numeric(best1_nguyen@coef[1]),
+                          beta1 = as.numeric(best1_nguyen@coef[2]))
+
+fit2_nguyen <- LogFunction(log_V = predframe,
+                           log_beta0 = best2_nguyen@coef[1],
+                          beta1 = best2_nguyen@coef[2])
+
+fit3_nguyen <- LogFunction(log_V = predframe,
+                           log_beta0 = as.numeric(best3_nguyen@coef[1]),
+                           beta1 = as.numeric(best3_nguyen@coef[2]))
+
+fit4_nguyen <- LogFunction(log_V = predframe,
+                           log_beta0 = as.numeric(best4_nguyen@coef[1]),
+                           beta1 = as.numeric(best4_nguyen@coef[2]))
+
+fit_zikv_body <- LogFunction(log_V = predframe,
+                         log_beta0 = as.numeric(best_zikv_body@coef[1]),
+                         beta1 = as.numeric(best_zikv_body@coef[2]))
+
+pred <- data.frame(dose = rep(predframe,5),
+                   resp = c(fit_zikv_body,
+                            fit1_nguyen,
+                            fit2_nguyen,
+                            fit3_nguyen,
+                            fit4_nguyen),
+                   type_exact = rep(c("zikv", "nguyen1", "nguyen2", "nguyen3", "nguyen4"), each = length(predframe)),
+                   type_paper = rep(c("ZIKV - Present study", "Nguyen et al. 2013", "Nguyen et al. 2013",
+                                      "Nguyen et al. 2013", "Nguyen et al. 2013"), each = length(predframe)),
+                   virus = rep(c("ZIKV",
+                                 "DENV-1",
+                                 "DENV-2",
+                                 "DENV-3",
+                                 "DENV-4"), each = length(predframe)))
+
+
+# Each curve with the corresponding data
+
+my_colors <- c("Dengue virus 1" = "#252525",
+               "Dengue virus 2" = "#636363",
+               "Dengue virus 3" = "#969696",
+               "Dengue virus 4" = "#cccccc",
+               "Zika virus" = "#2b8cbe")
+
+pzb <- ggplot() + geom_line(aes(x = predframe, y = fit_zikv_body,
+                                color = "Zika virus"),
+                            linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = zikv_body, aes(x = log_V, y = k/N, size = N,
+                                   color = "Zika virus"), alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito body infection",
+       x = "",
+       size = "Sample size") +
+  ggtitle("Zika virus") +
+  scale_x_continuous(limits = c(0,8.15),
+                   expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors, guide = "none") +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.title = element_text(size = 24),
+        legend.text = element_text(size = 24),
+        legend.position = c(0.15,0.75),
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+
+p1n <- ggplot() + geom_line(data = pred[pred$type_exact == "nguyen1",],
+                            aes(x = dose, y = resp, color = "Dengue virus 1"),
+                            linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = nguyen_pfu1_sol2,
+             aes(x = log_V, y = k/N, size = N, color = "Dengue virus 1"),
+             alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito body infection",
+       x = "",
+       size = "") +
+  ggtitle("Dengue virus 1") +
+    scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors) +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.position = "none",
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+
+p2n <- ggplot() + geom_line(data = pred[pred$type_exact == "nguyen2",],
+                            aes(x = dose, y = resp, color = "Dengue virus 2"),
+                            linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = nguyen_pfu2_sol2,
+             aes(x = log_V, y = k/N, size = N, color = "Dengue virus 2"),
+             alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito body infection",
+       x = "",
+       size = "") +
+  ggtitle("Dengue virus 2") +
+    scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors) +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.position = "none",
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+
+p3n <- ggplot() + geom_line(data = pred[pred$type_exact == "nguyen3",],
+                            aes(x = dose, y = resp, color = "Dengue virus 3"),
+                            linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = nguyen_pfu3_sol2,
+             aes(x = log_V, y = k/N, size = N, color = "Dengue virus 3"),
+             alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito body infection",
+       x = "",
+       size = "") +
+  ggtitle("Dengue virus 3") +
+    scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors) +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.position = "none",
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+
+p4n <- ggplot() + geom_line(data = pred[pred$type_exact == "nguyen4",],
+                            aes(x = dose, y = resp, color = "Dengue virus 4"),
+                            linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = nguyen_pfu4_sol2,
+             aes(x = log_V, y = k/N, size = N, color = "Dengue virus 4"),
+             alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito body infection",
+       x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+       size = "") +
+  ggtitle("Dengue virus 4") +
+    scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors) +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.position = "none",
+        axis.title.x = element_text(size = 24,
+                                    margin = margin(t = 15)),
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+# go to next chunk to assemble with other fits and save the figure
+```
+
+```{r}
+#| label: suppl-plot-fit-and-data-LEG-SOL2
+#| echo: false
+
+duong_pfu1_sol2 <- conversion_and_small_values_correction(duong_df,
+                                                          serotype = 1,
+                                                          solution = 2) 
+duong_pfu4_sol2 <- conversion_and_small_values_correction(duong_df,
+                                                          serotype = 4,
+                                                          solution = 2) 
+# note : DENV2 fit was excluded because it was not insightful (no sigmoidal shape), because of data conversion
+
+best1_duong <- readRDS(paste0(save_path,"betabinom_Log_DENV1_Duong_LEG.rds"))
+best4_duong <- readRDS(paste0(save_path,"betabinom_Hill_DENV4_Duong_LEG.rds"))
+
+
+best_zikv_leg <- readRDS(paste0(save_path,"betabinom_Log_sylv_ZIKV_squirrel_LEG.rds")) 
+predframe <- seq(0,10,length.out = 60)
+
+fit_zikv_leg <- LogFunction(log_V = predframe,
+                 log_beta0 = as.numeric(best_zikv_leg@coef[1]),
+                 beta1 = as.numeric(best_zikv_leg@coef[2]))
+
+fit1_duong <- LogFunction(log_V = predframe,
+                          log_beta0 = as.numeric(best1_duong@coef[1]),
+                          beta1 = as.numeric(best1_duong@coef[2]))
+
+fit4_duong <- Hill(log_V = predframe,
+                       gamma0 = exp(best4_duong@coef[1]),
+                       gamma1 = best4_duong@coef[2])
+
+pred <- data.frame(dose = rep(predframe,3),
+                   resp = c(fit_zikv_leg,
+                            fit1_duong,
+                            fit4_duong),
+                   type_exact = rep(c("zikv", "duong1", "duong4"), each = length(predframe)),
+                   type_paper = rep(c("ZIKV - Present study", "Duong et al. 2015",
+                                      "Duong et al. 2015"), each = length(predframe)),
+                   virus = rep(c("ZIKV",
+                                 "DENV-1",
+                                 "DENV-4"), each = length(predframe)))
+
+my_colors <- c("Dengue virus 1" = "#252525",
+               "Dengue virus 2" = "#636363",
+               "Dengue virus 3" = "#969696",
+               "Dengue virus 4" = "#cccccc",
+               "Zika virus" = "#2b8cbe")
+
+pzl <- ggplot() + geom_line(aes(x = predframe, y = fit_zikv_leg,
+                                color = "Zika virus"), linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = zikv_leg, aes(x = log_V, y = k/N, size = N,
+                                  color = "Zika virus"), alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito leg infection",
+       x = "",
+       size = "") +
+  ggtitle("Zika virus") +
+    scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors) +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.position = "none",
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+
+p1d <- ggplot() + geom_line(data = pred[pred$type_exact == "duong1",],
+                            aes(x = dose, y = resp, color = "Dengue virus 1"),
+                            linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = duong_pfu1_sol2,
+             aes(x = log_V, y = k/N, size = N, color = "Dengue virus 1"),
+             alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito leg infection",
+       x = "",
+       size = "") +
+  ggtitle("Dengue virus 1") +
+    scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors) +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.position = "none",
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+
+p4d <- ggplot() + geom_line(data = pred[pred$type_exact == "duong4",],
+                            aes(x = dose, y = resp, color = "Dengue virus 4"),
+                            linewidth = 1.3, alpha = 0.9) +
+  geom_point(data = duong_pfu4_sol2,
+             aes(x = log_V, y = k/N, size = N, color = "Dengue virus 4"),
+             alpha = 0.7) +
+  theme_classic() +
+  labs(y = "Prob mosquito leg infection",
+       x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+       size = "") +
+  ggtitle("Dengue virus 4") +
+  scale_x_continuous(limits = c(0,8.15),
+                   expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.03,0.04))) +
+  scale_size_continuous(limits=c(1,30),breaks=c(5,15,25),
+                        range = c(0,15)) +
+  scale_color_manual(values = my_colors) +
+  theme(axis.text = element_text(size = 24),
+        plot.title = element_text(size = 24),
+        legend.position = "none",
+        axis.title.x = element_text(size = 24,
+                                    margin = margin(t = 15)),
+        axis.title.y = element_text(size = 24,
+                                    margin = margin(r = 15)))
+
+
+# Assembly
+
+p <- (pzb | pzl) / (p1n | p1d) / (p2n + plot_spacer()) / (p3n + plot_spacer()) / (p4n + p4d)
+
+png(filename = "../output/figures/suppl/Figure_S9.png", width = 1600, height = 2600)
+plot(p) 
+dev.off()
+
+```
+
+
+```{r}
+#| label: dose-50-plot-uncertainty-BODY
+#| echo: false
+
+# Uncertainty around fits and dose 50 -----
+best1_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV1_Nguyen_BODY.rds"))
+best2_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV2_Nguyen_BODY.rds"))
+best3_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV3_Nguyen_BODY.rds"))
+best4_nguyen <- readRDS(paste0(save_path,"betabinom_Log_DENV4_Nguyen_BODY.rds"))
+
+best_zikv_body <- readRDS(paste0(save_path,"betabinom_Log_sylv_ZIKV_squirrel_BODY.rds"))
+
+samples = 5e3
+LogV_vector = seq(0,10, length.out = 500) # to make sure we have a proba close enough to 50% in each curve
+
+# The function applies truncated normal sampling for parameters which should not cross certain boundaries
+# to keep the output between 0 and 1
+# if such cases still occur, we apply a brut-force artificial resampling, to keep only trajectories between 0 and 1
+
+N1 <- compute_uncertainty_dose_resp(best1_nguyen, samples, LogV_vector, LogFunction, "Log")
+N1_50 <- N1$dose50_estim
+# N1_CI <- quantile(N1$dose50_CI, probs = c(0.025, 0.975))
+# previously CI was computed this way
+# to be consistent with what is plotted (only minor inconsistencies)
+# confidence intervals directly computed based on the envelope
+# find the dose for which min/max 95 are close to 0.5
+# reversed : min is found with upper envelope (max95) and vice versa
+# still, there can be small inconsistencies with the published version because of the random sampling
+N1_CI <- c(N1$envelope$dose[which.min(abs(N1$envelope$max_95-0.5))],
+           N1$envelope$dose[which.min(abs(N1$envelope$min_95-0.5))])
+
+N2 <- compute_uncertainty_dose_resp(best2_nguyen, samples, LogV_vector, LogFunction, "Log")
+N2_50 <- N2$dose50_estim
+N2_CI <- c(N2$envelope$dose[which.min(abs(N2$envelope$max_95-0.5))],
+           N2$envelope$dose[which.min(abs(N2$envelope$min_95-0.5))])
+
+N3 <- compute_uncertainty_dose_resp(best3_nguyen, samples, LogV_vector, LogFunction, "Log")
+N3_50 <-  N3$dose50_estim
+N3_CI <- c(N3$envelope$dose[which.min(abs(N3$envelope$max_95-0.5))],
+           N3$envelope$dose[which.min(abs(N3$envelope$min_95-0.5))])
+
+N4 <- compute_uncertainty_dose_resp(best4_nguyen, samples, LogV_vector, LogFunction, "Log")
+N4_50 <- N4$dose50_estim
+N4_CI <- c(N4$envelope$dose[which.min(abs(N4$envelope$max_95-0.5))],
+           N4$envelope$dose[which.min(abs(N4$envelope$min_95-0.5))])
+
+Z <- compute_uncertainty_dose_resp(best_zikv_body, samples, LogV_vector, LogFunction, "Log", type = "betabinom")
+Z_50 <- Z$dose50_estim
+Z_CI <- c(Z$envelope$dose[which.min(abs(Z$envelope$max_95-0.5))],
+          Z$envelope$dose[which.min(abs(Z$envelope$min_95-0.5))])
+
+# Blue for ZIKV, shades of grey for DENV
+my_colors <- c("Dengue virus 1" = "#252525",
+               "Dengue virus 2" = "#636363",
+               "Dengue virus 3" = "#969696",
+               "Dengue virus 4" = "#cccccc",
+               "Zika virus" = "#2b8cbe")
+
+# sprintf is used to show the 0 decimals even when rounded to integer
+labelN1 <- paste0("Dengue virus 1\n",(sprintf('%.2f',N1_50)),
+                                      " [",
+                                      (sprintf('%.2f',N1_CI[1])),";",(sprintf('%.2f',N1_CI[2])),
+                                      "]")
+
+labelN2 <- paste0("Dengue virus 2\n",(sprintf('%.2f',N2_50)),
+                                      " [",
+                                      (sprintf('%.2f',N2_CI[1])),";",(sprintf('%.2f',N2_CI[2])),
+                                      "]")
+
+labelN3 <- paste0("Dengue virus 3\n",(sprintf('%.2f',N3_50)),
+                                      " [",
+                                      (sprintf('%.2f',N3_CI[1])),";",(sprintf('%.2f',N3_CI[2])),
+                                      "]")
+
+labelN4 <- paste0("Dengue virus 4\n",(sprintf('%.2f',N4_50)),
+                                      " [",
+                                      (sprintf('%.2f',N4_CI[1])),";",(sprintf('%.2f',N4_CI[2])),
+                                      "]")
+
+labelZ <- paste0("Zika virus\n",(sprintf('%.2f',Z_50)),
+                                      " [",
+                                      (sprintf('%.2f',Z_CI[1])),";",(sprintf('%.2f',Z_CI[2])),
+                                      "]")
+  
+legend_title <- bquote("Virus " ~ID[50]~"[CI]") 
+
+p1 <- ggplot() + 
+  geom_vline(aes(color = "Zika virus", xintercept = Z_50)) +
+  geom_vline(aes(color = "Dengue virus 1", xintercept = N1_50)) +
+  geom_line(data = N1$envelope, aes(x = dose, y = fit, color = "Dengue virus 1"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = N1$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Dengue virus 1"), alpha = 0.2) +
+  geom_line(data = Z$envelope, aes(x = dose, y = fit, color = "Zika virus"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = Z$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Zika virus"), alpha = 0.2) +
+  geom_point(aes(x = N1_50, y = 0.5,
+                 color = "Dengue virus 1"),
+             size = 4, alpha = 0.8) +
+  geom_point(aes(x = Z_50, y = 0.5,
+               color = "Zika virus"),
+             size = 4, alpha = 0.8) +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.01,0.03))) +
+  scale_color_manual(values = my_colors[c(1,5)],
+                     name = legend_title,
+                     labels = c(labelN1,labelZ)) +
+  scale_fill_manual(values = my_colors[c(1,5)],
+                     name = legend_title,
+                     labels = c(labelN1,labelZ)) +
+  labs(x = "",
+       y = "Prob mosquito body infection") +
+  guides(color = guide_legend(nrow = 3),
+         fill = guide_legend(nrow = 3)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 20),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20,
+                                    margin = margin(r = 15)),
+        legend.text = element_text(size = 19),
+        legend.title = element_text(size = 19),
+        legend.position = c(0.22,0.75),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(t = 0, r = 15, b = 0, l = 0),
+        legend.background = element_rect(color = NA, fill = NA))
+
+p2 <- ggplot() + 
+  geom_vline(aes(color = "Zika virus", xintercept = Z_50)) +
+  geom_vline(aes(color = "Dengue virus 2", xintercept = N2_50)) +
+  geom_line(data = N2$envelope, aes(x = dose, y = fit, color = "Dengue virus 2"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = N2$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Dengue virus 2"), alpha = 0.2) +
+  geom_line(data = Z$envelope, aes(x = dose, y = fit, color = "Zika virus"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = Z$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                     fill = "Zika virus"), alpha = 0.2) +
+  geom_point(aes(x = N2_50, y = 0.5,
+                 color = "Dengue virus 2"),
+             size = 4, alpha = 0.8) +
+  geom_point(aes(x = Z_50, y = 0.5,
+               color = "Zika virus"),
+             size = 4, alpha = 0.8) +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.01,0.03))) +
+  scale_color_manual(values = my_colors[c(2,5)],
+                     name = "",
+                     labels = c(labelN2,labelZ)) +
+  scale_fill_manual(values = my_colors[c(2,5)],
+                     name = "",
+                     labels = c(labelN2,labelZ)) +
+  labs(x = "",
+       y = "") +
+  guides(color = guide_legend(nrow = 3),
+         fill = guide_legend(nrow = 3)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 20),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20,
+                                    margin = margin(r = 0)),
+        legend.text = element_text(size = 19),
+        legend.title = element_text(size = 19),
+        legend.position = c(0.22,0.75),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0),
+        legend.background = element_rect(color = NA, fill = NA))
+
+p3 <- ggplot() + 
+  geom_vline(aes(color = "Zika virus", xintercept = Z_50)) +
+  geom_vline(aes(color = "Dengue virus 3", xintercept = N3_50)) +
+  geom_line(data = N3$envelope, aes(x = dose, y = fit, color = "Dengue virus 3"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = N3$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Dengue virus 3"), alpha = 0.2) +
+  geom_line(data = Z$envelope, aes(x = dose, y = fit, color = "Zika virus"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = Z$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                     fill = "Zika virus"), alpha = 0.2) +
+  geom_point(aes(x = N3_50, y = 0.5,
+                 color = "Dengue virus 3"),
+             size = 4, alpha = 0.8) +
+  geom_point(aes(x = Z_50, y = 0.5,
+               color = "Zika virus"),
+             size = 4, alpha = 0.8) +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.01,0.03))) +
+  scale_color_manual(values = my_colors[c(3,5)],
+                     name = "",
+                     labels = c(labelN3,labelZ)) +
+  scale_fill_manual(values = my_colors[c(3,5)],
+                     name = "",
+                     labels = c(labelN3,labelZ)) +
+  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+       y = "Prob mosquito body infection") +
+  guides(color = guide_legend(nrow = 3),
+         fill = guide_legend(nrow = 3)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 20),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20,
+                                    margin = margin(r = 15)),
+        legend.text = element_text(size = 19),
+        legend.title = element_text(size = 19),
+        legend.position = c(0.22,0.75),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(t = 0, r = 15, b = 0, l = 0),
+        legend.background = element_rect(color = NA, fill = NA))
+
+
+p4 <- ggplot() + 
+  geom_vline(aes(color = "Zika virus", xintercept = Z_50)) +
+  geom_vline(aes(color = "Dengue virus 4", xintercept = N4_50)) +
+  geom_line(data = N4$envelope, aes(x = dose, y = fit, color = "Dengue virus 4"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = N4$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Dengue virus 4"), alpha = 0.2) +
+  geom_line(data = Z$envelope, aes(x = dose, y = fit, color = "Zika virus"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = Z$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                     fill = "Zika virus"), alpha = 0.2) +
+  geom_point(aes(x = N4_50, y = 0.5,
+                 color = "Dengue virus 4"),
+             size = 4, alpha = 0.8) +
+  geom_point(aes(x = Z_50, y = 0.5,
+               color = "Zika virus"),
+             size = 4, alpha = 0.8) +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.01,0.03))) +
+  scale_color_manual(values = my_colors[c(4,5)],
+                     name = "",
+                     labels = c(labelN4,labelZ)) +
+  scale_fill_manual(values = my_colors[c(4,5)],
+                     name = "",
+                     labels = c(labelN4,labelZ)) +
+  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+       y = "") +
+  guides(color = guide_legend(nrow = 3),
+         fill = guide_legend(nrow = 3)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 20),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20,
+                                    margin = margin(r = 0)),
+        legend.text = element_text(size = 19),
+        legend.title = element_text(size = 19),
+        legend.position = c(0.22,0.75),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0),
+        legend.background = element_rect(color = NA, fill = NA))
+
+
+p <- (p1 | p2) / (p3 | p4)
+p <- p + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size = 19),
+                                                   plot.tag.position = c(0.15,0.98))
+png(filename = "../output/figures/main/Figure_5.png",
+    width = 1300, height = 900)
+print(p)
+dev.off()
+
+```
+
+
+```{r}
+#| label: dose-50-plot-uncertainty-LEG
+#| echo: false
+
+# Uncertainty around fits and dose 50 -----
+best1_duong <- readRDS(paste0(save_path,"betabinom_Log_DENV1_Duong_LEG.rds"))
+best2_duong <- readRDS(paste0(save_path,"betabinom_Log_DENV2_Duong_LEG.rds"))
+best4_duong <- readRDS(paste0(save_path,"betabinom_Hill_DENV4_Duong_LEG.rds"))
+
+
+best_zikv_leg <- readRDS(paste0(save_path,"betabinom_Log_sylv_ZIKV_squirrel_LEG.rds"))
+
+samples = 5e3
+LogV_vector = seq(0,10, length.out = 500) # to make sure we have a proba close enough to 50% in each curve
+
+# The function applies truncated normal sampling for parameters which should not cross certain boundaries
+# to keep the output between 0 and 1
+# if such cases still occur, we apply a brut-force artificial resampling, to keep only trajectories between 0 and 1
+
+# some inconsistencies with the published version can exist, because of random sampling
+Z <- compute_uncertainty_dose_resp(best_zikv_leg, samples, LogV_vector, LogFunction, "Log", type = "betabinom")
+Z_50 <- Z$dose50_estim
+Z_CI <- c(Z$envelope$dose[which.min(abs(Z$envelope$max_95-0.5))],
+          Z$envelope$dose[which.min(abs(Z$envelope$min_95-0.5))])
+
+D1 <- compute_uncertainty_dose_resp(best1_duong, samples, LogV_vector, LogFunction, "Log")
+D1_50 <- D1$dose50_estim
+D1_CI <- c(D1$envelope$dose[which.min(abs(D1$envelope$max_95-0.5))],
+           D1$envelope$dose[which.min(abs(D1$envelope$min_95-0.5))])
+
+D4 <- compute_uncertainty_dose_resp(best4_duong, samples, LogV_vector, Hill, "Hill")
+D4_50 <- D4$dose50_estim
+D4_CI <- c(D4$envelope$dose[which.min(abs(D4$envelope$max_95-0.5))],
+           D4$envelope$dose[which.min(abs(D4$envelope$min_95-0.5))])
+
+# Blue for ZIKV, shades of grey for DENV
+my_colors <- c("Dengue virus 1" = "#252525",
+               "Dengue virus 2" = "#636363",
+               "Dengue virus 3" = "#969696",
+               "Dengue virus 4" = "#cccccc",
+               "Zika virus" = "#2b8cbe")
+
+# sprintf is used to show the 0 decimals even when rounded to integer
+labelD1 <- paste0("Dengue virus 1\n",(sprintf('%.2f',D1_50)),
+                                      " [",
+                                      (sprintf('%.2f',D1_CI[1])),";",(sprintf('%.2f',D1_CI[2])),
+                                      "]")
+
+labelD4 <- paste0("Dengue virus 4\n",(sprintf('%.2f',D4_50)),
+                                      " [",
+                                      (sprintf('%.2f',D4_CI[1])),";",(sprintf('%.2f',D4_CI[2])),
+                                      "]")
+
+labelZ <- paste0("Zika virus\n",(sprintf('%.2f',Z_50)),
+                                      " [",
+                                      (sprintf('%.2f',Z_CI[1])),";",(sprintf('%.2f',Z_CI[2])),
+                                      "]")
+  
+legend_title <- bquote("Virus " ~ID[50]~"[CI]") 
+
+p1 <- ggplot() + 
+  geom_vline(aes(color = "Zika virus", xintercept = Z_50)) +
+  geom_vline(aes(color = "Dengue virus 1", xintercept = D1_50)) +
+  geom_line(data = D1$envelope, aes(x = dose, y = fit, color = "Dengue virus 1"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = D1$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Dengue virus 1"), alpha = 0.2) +
+  geom_line(data = Z$envelope, aes(x = dose, y = fit, color = "Zika virus"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = Z$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Zika virus"), alpha = 0.2) +
+  geom_point(aes(x = D1_50, y = 0.5,
+                 color = "Dengue virus 1"),
+             size = 4, alpha = 0.8) +
+  geom_point(aes(x = Z_50, y = 0.5,
+               color = "Zika virus"),
+             size = 4, alpha = 0.8) +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.01,0.03))) +
+  scale_color_manual(values = my_colors[c(1,5)],
+                     name = legend_title,
+                     labels = c(labelD1,labelZ)) +
+  scale_fill_manual(values = my_colors[c(1,5)],
+                     name = legend_title,
+                     labels = c(labelD1,labelZ)) +
+  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+       y = "Prob mosquito leg infection") +
+  guides(color = guide_legend(nrow = 3),
+         fill = guide_legend(nrow = 3)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 20),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20,
+                                    margin = margin(r = 15)),
+        legend.text = element_text(size = 19),
+        legend.title = element_text(size = 19),
+        legend.position = c(0.85,0.2),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(t = 0, r = 15, b = 0, l = 0),
+        legend.background = element_rect(color = NA, fill = NA))
+
+p4 <- ggplot() + 
+  geom_vline(aes(color = "Zika virus", xintercept = Z_50)) +
+  geom_vline(aes(color = "Dengue virus 4", xintercept = D4_50)) +
+  geom_line(data = D4$envelope, aes(x = dose, y = fit, color = "Dengue virus 4"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = D4$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                      fill = "Dengue virus 4"), alpha = 0.2) +
+  geom_line(data = Z$envelope, aes(x = dose, y = fit, color = "Zika virus"),
+            linewidth = 1.3, alpha = 0.9) +
+  geom_ribbon(data = Z$envelope, aes(x = dose, ymin = min_95, ymax = max_95,
+                                     fill = "Zika virus"), alpha = 0.2) +
+  geom_point(aes(x = D4_50, y = 0.5,
+                 color = "Dengue virus 4"),
+             size = 4, alpha = 0.8) +
+  geom_point(aes(x = Z_50, y = 0.5,
+               color = "Zika virus"),
+             size = 4, alpha = 0.8) +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,8.15),
+                     expand = expansion(add = c(0.05,0.1))) +
+  scale_y_continuous(limits = c(0,1),
+                     expand = expansion(add = c(0.01,0.03))) +
+  scale_color_manual(values = my_colors[c(4,5)],
+                     name = "",
+                     labels = c(labelD4,labelZ)) +
+  scale_fill_manual(values = my_colors[c(4,5)],
+                     name = "",
+                     labels = c(labelD4,labelZ)) +
+  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+       y = "") +
+  guides(color = guide_legend(nrow = 3),
+         fill = guide_legend(nrow = 3)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20),
+        legend.text = element_text(size = 19),
+        legend.title = element_text(size = 19),
+        legend.position = c(0.85,0.2),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(t = 0, r = 0, b = 0, l = 0),
+        legend.background = element_rect(color = NA, fill = NA)) # to have no white around legend
+
+p <- (p1 | p4) 
+p <- p + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size = 19),
+                                                   plot.tag.position = c(0.15,0.98))
+png(filename = "../output/figures/suppl/Figure_S10.png",
+    width = 1300, height = 450)
+print(p)
+dev.off()
+
+
+```

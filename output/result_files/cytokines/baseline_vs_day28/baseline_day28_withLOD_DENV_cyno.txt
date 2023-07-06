@@ -1,0 +1,348 @@
+EGF
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+1 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 27, p-value = 0.6523
+alternative hypothesis: true location shift is not equal to 0
+
+Eotaxin
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+0 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 34, p-value = 0.2031
+alternative hypothesis: true location shift is not equal to 0
+
+G.CSF
+9 obs in baseline
+9 obs in day 28
+4 LOD baseline
+6 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 13, p-value = 0.1775
+alternative hypothesis: true location shift is not equal to 0
+
+GM.CSF
+9 obs in baseline
+9 obs in day 28
+7 LOD baseline
+7 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 3, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+HGF
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+1 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 21, p-value = 0.7263
+alternative hypothesis: true location shift is not equal to 0
+
+I.TAC
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+0 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 41, p-value = 0.02734
+alternative hypothesis: true location shift is not equal to 0
+
+IFN.g
+9 obs in baseline
+9 obs in day 28
+2 LOD baseline
+3 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 19, p-value = 0.4469
+alternative hypothesis: true location shift is not equal to 0
+
+IL.10
+9 obs in baseline
+9 obs in day 28
+9 LOD baseline
+9 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 0, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+
+IL.12
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+1 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 42, p-value = 0.01953
+alternative hypothesis: true location shift is not equal to 0
+
+IL.15
+9 obs in baseline
+9 obs in day 28
+9 LOD baseline
+9 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 0, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+
+IL.17
+9 obs in baseline
+9 obs in day 28
+9 LOD baseline
+9 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 0, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+
+IL.1B
+9 obs in baseline
+9 obs in day 28
+9 LOD baseline
+9 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 0, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+
+IL.2
+9 obs in baseline
+9 obs in day 28
+7 LOD baseline
+8 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 3, p-value = 0.3711
+alternative hypothesis: true location shift is not equal to 0
+
+IL.4
+9 obs in baseline
+9 obs in day 28
+9 LOD baseline
+9 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 0, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+
+IL.5
+9 obs in baseline
+9 obs in day 28
+9 LOD baseline
+9 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 0, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+
+IL.6
+9 obs in baseline
+9 obs in day 28
+7 LOD baseline
+7 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 3, p-value = 0.3711
+alternative hypothesis: true location shift is not equal to 0
+
+IL.8
+9 obs in baseline
+9 obs in day 28
+5 LOD baseline
+4 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 9, p-value = 0.7874
+alternative hypothesis: true location shift is not equal to 0
+
+IL.RA
+9 obs in baseline
+9 obs in day 28
+2 LOD baseline
+2 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 35, p-value = 0.02086
+alternative hypothesis: true location shift is not equal to 0
+
+IP.10
+9 obs in baseline
+9 obs in day 28
+6 LOD baseline
+7 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 6, p-value = 0.1814
+alternative hypothesis: true location shift is not equal to 0
+
+MCP.1
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+0 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 39, p-value = 0.05469
+alternative hypothesis: true location shift is not equal to 0
+
+MDC
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+0 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 38, p-value = 0.07422
+alternative hypothesis: true location shift is not equal to 0
+
+MIF
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+0 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 34, p-value = 0.2031
+alternative hypothesis: true location shift is not equal to 0
+
+MIG
+9 obs in baseline
+9 obs in day 28
+7 LOD baseline
+8 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 2, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+MIP.1a
+9 obs in baseline
+9 obs in day 28
+3 LOD baseline
+5 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 15, p-value = 0.4017
+alternative hypothesis: true location shift is not equal to 0
+
+MIP.1B
+9 obs in baseline
+9 obs in day 28
+1 LOD baseline
+2 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 27, p-value = 0.234
+alternative hypothesis: true location shift is not equal to 0
+
+RANTES
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+1 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 22, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+TGFbeta
+9 obs in baseline
+9 obs in day 28
+0 LOD baseline
+0 LOD day 28
+
+	Wilcoxon signed rank exact test
+
+data:  log10(value) by day
+V = 34, p-value = 0.2031
+alternative hypothesis: true location shift is not equal to 0
+
+TNF.alpha
+9 obs in baseline
+9 obs in day 28
+6 LOD baseline
+7 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 1, p-value = 0.4227
+alternative hypothesis: true location shift is not equal to 0
+
+VEGF
+9 obs in baseline
+9 obs in day 28
+9 LOD baseline
+9 LOD day 28
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  log10(value) by day
+V = 0, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+

@@ -1,0 +1,361 @@
+EGF
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0018 0.9668
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 19, p-value = 0.8357
+alternative hypothesis: true location shift is not equal to 0
+
+Eotaxin
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0042 0.9496
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 12, p-value = 0.2343
+alternative hypothesis: true location shift is not equal to 0
+
+G.CSF
+3 male obs
+5 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.9841 0.3595
+       6               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 13, p-value = 0.1429
+alternative hypothesis: true location shift is not equal to 0
+
+GM.CSF
+2 male obs
+1 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df    F value    Pr(>F)    
+group  1 1.5148e+32 < 2.2e-16 ***
+       1                         
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 0, p-value = 0.6667
+alternative hypothesis: true location shift is not equal to 0
+
+HGF
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.4227 0.5289
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 19, p-value = 0.8357
+alternative hypothesis: true location shift is not equal to 0
+
+I.TAC
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.3015 0.5939
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 17, p-value = 0.6282
+alternative hypothesis: true location shift is not equal to 0
+
+IFN.g
+4 male obs
+6 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.4817 0.5073
+       8               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 12, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+IL.12
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.2754 0.6101
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 27, p-value = 0.4452
+alternative hypothesis: true location shift is not equal to 0
+
+IL.15
+1 male obs
+0 female obs
+0 LOD male
+0 LOD female
+IL.2
+1 male obs
+1 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1     NaN    NaN
+       0               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 1, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+IL.6
+3 male obs
+0 female obs
+0 LOD male
+0 LOD female
+IL.8
+3 male obs
+2 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.2271 0.6662
+       3               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 4, p-value = 0.8
+alternative hypothesis: true location shift is not equal to 0
+
+IL.RA
+6 male obs
+5 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.8199 0.3888
+       9               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 22, p-value = 0.2468
+alternative hypothesis: true location shift is not equal to 0
+
+IP.10
+4 male obs
+2 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value   Pr(>F)   
+group  1  42.367 0.002875 **
+       4                    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 4, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+MCP.1
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value  Pr(>F)  
+group  1  5.2261 0.04307 *
+      11                  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 21, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+MDC
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0113 0.9172
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 20, p-value = 0.9452
+alternative hypothesis: true location shift is not equal to 0
+
+MIF
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.7826 0.3953
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 18, p-value = 0.7308
+alternative hypothesis: true location shift is not equal to 0
+
+MIG
+1 male obs
+2 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df    F value    Pr(>F)    
+group  1 1.2621e+29 1.792e-15 ***
+       1                         
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 2, p-value = 0.6667
+alternative hypothesis: true location shift is not equal to 0
+
+MIP.1a
+4 male obs
+4 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  1.2175 0.3121
+       6               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 12, p-value = 0.3429
+alternative hypothesis: true location shift is not equal to 0
+
+MIP.1B
+5 male obs
+6 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value  Pr(>F)  
+group  1  4.6724 0.05892 .
+       9                  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 18, p-value = 0.6623
+alternative hypothesis: true location shift is not equal to 0
+
+RANTES
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.2918 0.5999
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 31, p-value = 0.1807
+alternative hypothesis: true location shift is not equal to 0
+
+TGFbeta
+6 male obs
+7 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.5049 0.4922
+      11               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 11, p-value = 0.1807
+alternative hypothesis: true location shift is not equal to 0
+
+TNF.alpha
+3 male obs
+1 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.7465 0.4787
+       2               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 0, p-value = 0.5
+alternative hypothesis: true location shift is not equal to 0
+
+VEGF
+0 male obs
+0 female obs
+0 LOD male
+0 LOD female

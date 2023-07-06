@@ -1,0 +1,464 @@
+EGF
+12 male obs
+12 female obs
+10 LOD male
+6 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.9556 0.3389
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 52, p-value = 0.1798
+alternative hypothesis: true location shift is not equal to 0
+
+Eotaxin
+12 male obs
+12 female obs
+10 LOD male
+10 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.2455 0.6251
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 74, p-value = 0.8939
+alternative hypothesis: true location shift is not equal to 0
+
+G.CSF
+12 male obs
+12 female obs
+11 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.2465 0.6245
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 71.5, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+GM.CSF
+12 male obs
+12 female obs
+12 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1       1 0.3282
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 66, p-value = 0.3593
+alternative hypothesis: true location shift is not equal to 0
+
+HGF
+12 male obs
+12 female obs
+10 LOD male
+7 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.8102 0.3778
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 56, p-value = 0.2652
+alternative hypothesis: true location shift is not equal to 0
+
+I.TAC
+12 male obs
+12 female obs
+4 LOD male
+6 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.3975 0.5349
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 75, p-value = 0.8809
+alternative hypothesis: true location shift is not equal to 0
+
+IFN.g
+12 male obs
+12 female obs
+10 LOD male
+5 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  1.0889  0.308
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 48, p-value = 0.1188
+alternative hypothesis: true location shift is not equal to 0
+
+IL.10
+12 male obs
+12 female obs
+12 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1       1 0.3282
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 66, p-value = 0.3593
+alternative hypothesis: true location shift is not equal to 0
+
+IL.12
+12 male obs
+12 female obs
+10 LOD male
+7 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0903 0.7666
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 57, p-value = 0.2973
+alternative hypothesis: true location shift is not equal to 0
+
+IL.15
+12 male obs
+12 female obs
+10 LOD male
+8 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0057 0.9406
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 63, p-value = 0.5189
+alternative hypothesis: true location shift is not equal to 0
+
+IL.17
+12 male obs
+12 female obs
+11 LOD male
+12 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1       1 0.3282
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 78, p-value = 0.3593
+alternative hypothesis: true location shift is not equal to 0
+
+IL.1B
+12 male obs
+12 female obs
+12 LOD male
+10 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1   1.516 0.2312
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 60, p-value = 0.1662
+alternative hypothesis: true location shift is not equal to 0
+
+IL.2
+12 male obs
+12 female obs
+12 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1       1 0.3282
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 66, p-value = 0.3593
+alternative hypothesis: true location shift is not equal to 0
+
+IL.4
+12 male obs
+12 female obs
+12 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1       1 0.3282
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 66, p-value = 0.3593
+alternative hypothesis: true location shift is not equal to 0
+
+IL.5
+12 male obs
+12 female obs
+12 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1       1 0.3282
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 66, p-value = 0.3593
+alternative hypothesis: true location shift is not equal to 0
+
+IL.6
+12 male obs
+12 female obs
+12 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1       1 0.3282
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 66, p-value = 0.3593
+alternative hypothesis: true location shift is not equal to 0
+
+IL.8
+12 male obs
+12 female obs
+12 LOD male
+12 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1     NaN    NaN
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 72, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+
+IL.RA
+12 male obs
+12 female obs
+11 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0412 0.8411
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 72.5, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+IP.10
+12 male obs
+12 female obs
+10 LOD male
+6 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0787 0.7817
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 54, p-value = 0.2286
+alternative hypothesis: true location shift is not equal to 0
+
+MCP.1
+12 male obs
+12 female obs
+10 LOD male
+5 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  1.2836 0.2694
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 49, p-value = 0.1353
+alternative hypothesis: true location shift is not equal to 0
+
+MDC
+12 male obs
+12 female obs
+11 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.7904 0.3836
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 71.5, p-value = 1
+alternative hypothesis: true location shift is not equal to 0
+
+MIF
+12 male obs
+12 female obs
+0 LOD male
+0 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.9733 0.3346
+      22               
+
+	Wilcoxon rank sum exact test
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 64, p-value = 0.6707
+alternative hypothesis: true location shift is not equal to 0
+
+MIG
+12 male obs
+12 female obs
+9 LOD male
+11 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  2.7215 0.1132
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 85.5, p-value = 0.2478
+alternative hypothesis: true location shift is not equal to 0
+
+MIP.1a
+12 male obs
+12 female obs
+10 LOD male
+6 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0702 0.7935
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 54, p-value = 0.2286
+alternative hypothesis: true location shift is not equal to 0
+
+MIP.1B
+12 male obs
+12 female obs
+8 LOD male
+3 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.1109 0.7423
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 47, p-value = 0.1369
+alternative hypothesis: true location shift is not equal to 0
+
+RANTES
+12 male obs
+12 female obs
+8 LOD male
+9 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.0891 0.7681
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 78, p-value = 0.6926
+alternative hypothesis: true location shift is not equal to 0
+
+TGFbeta
+12 male obs
+12 female obs
+9 LOD male
+5 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  1.4803 0.2366
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 50.5, p-value = 0.1758
+alternative hypothesis: true location shift is not equal to 0
+
+TNF.alpha
+12 male obs
+12 female obs
+11 LOD male
+10 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1  0.3908 0.5383
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 66, p-value = 0.5807
+alternative hypothesis: true location shift is not equal to 0
+
+VEGF
+12 male obs
+12 female obs
+12 LOD male
+12 LOD female
+Levene's Test for Homogeneity of Variance (center = median)
+      Df F value Pr(>F)
+group  1     NaN    NaN
+      22               
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  log10(df_m$value) and log10(df_f$value)
+W = 72, p-value = NA
+alternative hypothesis: true location shift is not equal to 0
+

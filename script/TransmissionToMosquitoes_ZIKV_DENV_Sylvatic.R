@@ -15,14 +15,14 @@ library(tidyverse)
 library(bbmle) # for mle2
 library(emdbook) # for dbetabinom
 library(ggplot2)
-library(nls2)
+# library(nls2)
 library(mgcv) # for rmvn, gam
 library(scales) # for alpha function
 library(funrar) # for matrix_to_stack
 library(readxl)
 library(patchwork)
 library(tmvtnorm) # for truncated multi variate normal rtmvnorm
-library(investr) # for predFit
+# library(investr) # for predFit
 library(DHARMa)
 library(effects)
 library(nlstools)
@@ -105,20 +105,20 @@ df_den <- rbind(denv_cy_inf,
                 denv_sq_inf)
 
 ## General additive model ----
-mod_den <- gam(cbind(k,N-k) ~ s(log_V, k = 6),
-               data = df_den,
-               family = binomial)
-# the model was saved as an rds object if you want to load it directly (see below)
-# do not run this unless you want to overwrite the object
-# write_rds(mod_den, file = "../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_dengue.rds")
-
-# quality check of the model
-plot(mod_den, pages = 0, residuals = T, pch = 20, lwd = 1.8, cex = 0.7,
-     col = c("black", rep("red", length(mod_den$residuals))))
-gam.check(mod_den)
+# mod_den <- gam(cbind(k,N-k) ~ s(log_V, k = 6),
+#                data = df_den,
+#                family = binomial)
+# # the model was saved as an rds object if you want to load it directly (see below)
+# # do not run this unless you want to overwrite the object
+# # write_rds(mod_den, file = "../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_dengue.rds")
+# 
+# # quality check of the model
+# plot(mod_den, pages = 0, residuals = T, pch = 20, lwd = 1.8, cex = 0.7,
+#      col = c("black", rep("red", length(mod_den$residuals))))
+# gam.check(mod_den)
 
 # Load the model object instead of fitting it again if you want to make sure you're using the same model as the one published
-# mod_den <- readRDS("../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_dengue.rds")
+mod_den <- readRDS("../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_dengue.rds")
 
 summary(mod_den)
 # Family: binomial
@@ -147,8 +147,14 @@ pred_nl_den <- predict(mod_den, type = "response",
 pred_den <- data.frame(log_V = seq(0,3.9,length.out = 100),
                        pred_proba = pred_nl_den)
 
+breaks <- c(5, 10, 15)
+n_breaks <- length(breaks)
+labels <- c(breaks, rep("", n_breaks))
+shapes <- c(rep(16, n_breaks), rep(6, n_breaks))
+breaks2 <- rep(breaks, 2)
+
 p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
-                               size = 1.3) +
+                               linewidth = 1.3) +
   geom_point(data = df_den,
              aes(x = log_V, y = prob, pch = NHP,
                  size = N),
@@ -161,13 +167,17 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
   scale_shape_manual(name = "Monkey species",
                      values = c("Squirrel" = 16,
                                 "Cyno" = 6)) +
-  guides(shape = guide_legend(override.aes = list(size = 3))) +
+  guides(shape = guide_legend(order = 1,
+                              override.aes = list(size = 3))) +
   coord_cartesian(ylim = c(0,1), xlim = c(0,6.35)) +
   scale_x_continuous(breaks = seq(0,6.35),
                      expand = expansion(add = 0.06)) +
   scale_y_continuous(expand = expansion(add = c(0.02,0.03))) +
-  scale_size(limits=c(1,15), breaks=c(5,10,15),
-             range = c(0,10)) + # trans = "log10
+  scale_size_continuous(limits=c(1,15), range = c(0,10),
+                         breaks = breaks2, labels = labels,
+                         guide = guide_legend(order = 2, ncol = 2, byrow = FALSE,
+                                              override.aes = list(shape = shapes),
+                                              direction = "vertical", label.hjust = 1)) + # , label.vjust = -.5 trans = "log10
   theme_classic() +
   labs(x = bquote("Dengue virus titer ("*log[10]~"PFU/ml)"),
        y = "Prob mosquito infection",
@@ -186,7 +196,7 @@ plot(p_den)
 
 
 # ZIKA ----
-## Data -----
+## ZIKV squirrel data -----
 df_tmp <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                    dec = ".", sep = "\t")
 
@@ -212,48 +222,81 @@ zikv_sq_inf$paper <- "zikv"
 zikv_sq_inf$disease_class <- "unknown"
 zikv_sq_inf$serotype <- NA
 
+## ZIKV cyno data ----
+df_tmp <- read.csv("../data/Table_SX_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+                   dec = ".", sep = "\t")
+
+df_tmp <- df_tmp %>% clean_names()
+
+df_tmp <- df_tmp[,c("id","sex","final_treatment","day_post_infection","viremia_deduced",
+                    "number_of_mosquitoes_that_engorged_and_survived_to_titer",
+                    "x_mosquitoes_infected_body_legs_or_saliva")]
+
+df_tmp$k <- round((df_tmp$x_mosquitoes_infected_body_legs_or_saliva/100)*df_tmp$number_of_mosquitoes_that_engorged_and_survived_to_titer)
+
+select_inf <- df_tmp[!is.na(df_tmp$viremia_deduced) & !is.na(df_tmp$k) & df_tmp$final_treatment != "Control",]
+
+# viremia already in log(vir+1) / no need to do anything
+
+zikv_cy_inf <- select_inf[,c("id","viremia_deduced",
+                             "number_of_mosquitoes_that_engorged_and_survived_to_titer",
+                             "k")]
+
+colnames(zikv_cy_inf) <- c("ID","log_V","N","k")
+zikv_cy_inf$paper <- "zikv"
+zikv_cy_inf$disease_class <- "unknown"
+zikv_cy_inf$serotype <- NA
+
+## Merging datasets OR NOT (try both) ----
 zikv_sq_inf$NHP <- "Squirrel"
-df_zik <- zikv_sq_inf
+zikv_cy_inf$NHP <- "Cyno"
 
+df_zik <- rbind(zikv_cy_inf,
+                zikv_sq_inf)
 
-# General additive model ----
+# df_zik <- zikv_cy_inf
+# 
+# df_zik <- zikv_sq_inf
 
-mod_zik <- gam(cbind(k,N-k) ~ s(log_V, k = 6),
-               data = df_zik,
-               family = binomial)
-# the model was saved as an rds object if you want to load it directly (see below)
-# do not run this unless you want to overwrite the object
+# General additive model : NOT UPDATED YET ----
+
+# mod_zik <- gam(cbind(k,N-k) ~ s(log_V, k = 6),
+#                data = df_zik,
+#                family = binomial)
+# # the model was saved as an rds object if you want to load it directly (see below)
+# # do not run this unless you want to overwrite the object
 # write_rds(mod_zik, file = "../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_zika.rds")
-
-# quality check of the model
-plot(mod_zik, pages = 0, residuals = T, pch = 20, lwd = 1.8, cex = 0.7,
-     col = c("black", rep("red", length(mod_zik$residuals))))
-gam.check(mod_zik)
+# 
+# # quality check of the model
+# plot(mod_zik, pages = 0, residuals = T, pch = 20, lwd = 1.8, cex = 0.7,
+#      col = c("black", rep("red", length(mod_zik$residuals))))
+# gam.check(mod_zik)
 
 # Load the model object instead of fitting it again if you want to make sure you're using the same model as the one published
-# mod_zik <- readRDS("../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_zika.rds")
+mod_zik <- readRDS("../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_zika.rds")
 
 summary(mod_zik)
-# Family: binomial
-# Link function: logit
+# Below is the summary when squirrel and cynos are merged
+# Family: binomial 
+# Link function: logit 
 # 
 # Formula:
 #   cbind(k, N - k) ~ s(log_V, k = 6)
 # 
 # Parametric coefficients:
-#   Estimate Std. Error z value Pr(>|z|)
-# (Intercept)  -2.9402     0.8104  -3.628 0.000285 ***
+#   Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)  -3.0964     0.8098  -3.824 0.000131 ***
 #   ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 # 
 # Approximate significance of smooth terms:
-#   edf Ref.df Chi.sq p-value
-# s(log_V) 3.232  3.611  68.25  <2e-16 ***
+#   edf Ref.df Chi.sq p-value    
+# s(log_V) 4.623  4.888   90.9  <2e-16 ***
 #   ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 # 
-# R-sq.(adj) =  0.844   Deviance explained = 85.2%
-# UBRE = 0.14002  Scale est. = 1         n = 64
+# R-sq.(adj) =  0.857   Deviance explained = 85.2%
+# UBRE = 0.28301  Scale est. = 1         n = 74
 
 df_zik$prob <- df_zik$k/df_zik$N
 # for axis limits and point size breaks
@@ -265,13 +308,13 @@ pred_zik <- data.frame(log_V = seq(0,6.3,length.out = 75),
                        pred_proba = pred_nl_zik)
 
 p_zik <- ggplot() +   geom_vline(xintercept = log10(21), color = "darkgrey",
-                                 size = 1.3) +
+                                 linewidth = 1.3) +
   geom_point(data = df_zik,
              aes(x = log_V, y = prob, pch = NHP,
                  size = N),
              alpha = 0.5, stroke = 1.5) + 
   geom_line(data = pred_zik, aes(x = log_V, y = pred_proba),
-            color = "#2b8cbe", size = 2, alpha = 0.8) +
+            color = "#2b8cbe", linewidth = 2, alpha = 0.8) +
   annotate(geom = "text", label = "LOD",
            color = "darkgrey", size = 8,
            x = 1.57, y = 0.96) +
@@ -305,7 +348,7 @@ plot(p_zik)
 p <- (p_den / p_zik)
 p <- p + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size = 23),
                                                    plot.tag.position = c(0.14,0.98))
-png(filename = "../output/figures/main/Figure_4.png",
+png(filename = "../output/figures/main/Figure_4_ZIKV_merge_cyno_squirrel.png",
     width = 900, height = 1200)
 print(p)
 dev.off()

@@ -28,11 +28,12 @@ library(performance)
 library(scales) # for trans_breaks, alpha function
 library(broom) # for tidy
 library(ggdist)
-library(pracma) # for trapz
 library(DHARMa)
 library(effects)
 library(glmmTMB)
 library(data.table) # for %like%
+library(multcomp) # for glht
+
 
 ## Set Work Directory ------------------------------------------------------
 # Causes an error when rendering : RStudio not running
@@ -56,35 +57,47 @@ zikv_squirrel_fed <- c(9,5,10,11,4,6,7,4,7,9)
 denv_cyno_total <- c(1,1,1,1,10,10,10,10,10)
 denv_cyno_fed <- c(1,1,1,1,7,8,8,9,7)
 
+zikv_cyno_total <- c(15,15,15)
+zikv_cyno_fed <- c(7,11,7)
+
+# positive mosquitoes after one passage in C6/36 cells
 denv_squirrel_pos <- c(2,4,4,2,3,2,2,3,4,5)
 zikv_squirrel_pos <- c(6,1,5,11,4,6,7,4,6,8)
 denv_cyno_pos <- c(0,1,1,1,6,5,3,4,3) 
+zikv_cyno_pos <- c(7,10,5)
 
 denv_squirrel_fed_surv <- c(3,4,4,3,3,4,5,4,4,5) 
 zikv_squirrel_fed_surv <- c(9,5,10,11,4,6,7,4,6,8) 
 denv_cyno_fed_surv <- c(1,1,1,1,7,8,8,9,7) 
+zikv_cyno_fed_surv <- c(7,11,7)
 
 df <- data.frame(total = c(denv_squirrel_total,
                            denv_cyno_total,
-                           zikv_squirrel_total),
+                           zikv_squirrel_total,
+                           zikv_cyno_total),
                  fed = c(denv_squirrel_fed,
                          denv_cyno_fed,
-                         zikv_squirrel_fed),
+                         zikv_squirrel_fed,
+                         zikv_cyno_fed),
                  fed_surv = c(denv_squirrel_fed_surv,
                               denv_cyno_fed_surv,
-                              zikv_squirrel_fed_surv),
+                              zikv_squirrel_fed_surv,
+                              zikv_cyno_fed_surv),
                  pos = c(denv_squirrel_pos,
                          denv_cyno_pos,
-                         zikv_squirrel_pos),
+                         zikv_squirrel_pos,
+                         zikv_cyno_pos),
                  group = c(rep("Squirrel.Dengue virus",length(denv_squirrel_total)),
                            rep("Cyno.Dengue virus", length(denv_cyno_total)),
-                           rep("Squirrel.Zika virus", length(zikv_squirrel_total))))
+                           rep("Squirrel.Zika virus", length(zikv_squirrel_total)),
+                           rep("Cyno.Zika virus", length(zikv_cyno_total))))
 
 # exclude low exposure group of cynomolgus macaques
 df_high <- df[df$total != 1,]
 
+df_high$group <- gsub(" ","_",df_high$group) # no space for posthoc test to work
 df_high$group <- as.factor(df_high$group)
-df_high <- within(df_high, group <- relevel(group, ref = "Squirrel.Dengue virus"))
+df_high <- within(df_high, group <- relevel(group, ref = "Squirrel.Dengue_virus"))
 
 # Raw number of infected bites in high exposure groups only
 # apply positive proportion in (fed & survived) to (total fed)
@@ -96,20 +109,38 @@ model <- glmmTMB(pos_corr ~ group,
                  family = poisson,
                  data = df_high)
 simulateResiduals(model, plot = T)
-# heteroskedasticity ?
-plotResiduals(model, df_high$group)
-# not significant when plotted this way
+# ok
 testDispersion(model)
 # ok
 testZeroInflation(model)
 # ok
+MuMIn::AICc(model) # 124.3298
+
+# m1 <- glmmTMB(pos_corr ~ group,
+#                family = nbinom2,
+#                data = df_high)
+# # model convergence problem (tested nbinom1 and nbinom2)
+
 plot(allEffects(model, partial.residuals = T))
 summary(model)
 
+# select only the biologically relevant comparisons
+tuk = glht(model, linfct = mcp(group = c("Cyno.Dengue_virus - Squirrel.Dengue_virus = 0",
+                                          "Cyno.Zika_virus - Squirrel.Zika_virus = 0",
+                                          "Squirrel.Dengue_virus - Squirrel.Zika_virus = 0",
+                                          "Cyno.Dengue_virus - Cyno.Zika_virus = 0"))) 
+summary(tuk, test = adjusted("none"))
+summary(tuk, test = adjusted("fdr")) # benjamini-hochberg (false discovery rate) correction
+
+ggplot(df_high) + geom_jitter(aes(x = group, y = pos_corr)) +
+  geom_boxplot(aes(x = group, y = pos_corr),
+               fill = NA)
+
 # Mean proba (response scale) and CI for each group
-new_dat <- data.frame(group = c("Squirrel.Dengue virus",
-                                "Cyno.Dengue virus",
-                                "Squirrel.Zika virus"))
+new_dat <- data.frame(group = c("Squirrel.Dengue_virus",
+                                "Cyno.Dengue_virus",
+                                "Squirrel.Zika_virus",
+                                "Cyno.Zika_virus"))
 pp <- predict(model, se.fit = TRUE, newdata = new_dat)
 # the inverse link of a poisson is exp
 ci_lwr <- with(pp, exp(fit + qnorm(0.025)*se.fit))
@@ -132,7 +163,7 @@ ci_upr
 # using titers rounded as integers 
 # for those positive only after passage, we put 39 for now
 
-denv_titer <- c(c(39,39,0), # id 6314
+denv_sq_titer <- c(c(39,39,0), # id 6314
                 c(40,39,39,39), # id 6519
                 c(40,838,679,39), # id 4516
                 c(1836,39,0), # id 5045
@@ -143,7 +174,7 @@ denv_titer <- c(c(39,39,0), # id 6314
                 c(160,40,39,39), # id 6242 : titer = 40 was negative post passage
                 c(40,40,40,80,39)) # id 5910
 
-denv_titer_cyno <- c(c(39), # id SB393, negative even after passage but initiated a PRNT response
+denv_cy_titer <- c(c(39), # id SB393, negative even after passage but initiated a PRNT response
                      c(39), # id FR469A
                      c(39), # id BC407
                      c(39), # id CP60
@@ -153,7 +184,7 @@ denv_titer_cyno <- c(c(39), # id SB393, negative even after passage but initiate
                      c(39,39,39,39,0,0,0,0,0), # id FR840
                      c(39,39,39,0,0,0,0)) # id BC167
 
-zikv_titer <- c(c(160,639,279,1238,1158,39,0,0,0), # id 6550
+zikv_sq_titer <- c(c(160,639,279,1238,1158,39,0,0,0), # id 6550
                 c(639,0,0,0,0), # id 6518
                 c(2076,1078,1557,39,39,0,0,0,0,0), # id 6311
                 c(918,639,639,240,120,80,40,240,3990,679,39), # id 5013
@@ -164,13 +195,22 @@ zikv_titer <- c(c(160,639,279,1238,1158,39,0,0,0), # id 6550
                 c(1437,120,479,878,160,39), # id 4683
                 c(918,2275,798,838,2275,40,1277,39)) # id 4728
 
-df <- data.frame(titer = c(denv_titer, denv_titer_cyno, zikv_titer),
-                 virus = c(rep("Dengue virus",length(denv_titer)),
-                           rep("Dengue virus",length(denv_titer_cyno)),
-                           rep("Zika virus", length(zikv_titer))),
-                 NHP = c(rep("Squirrel",length(denv_titer)),
-                         rep("Cyno",length(denv_titer_cyno)),
-                         rep("Squirrel", length(zikv_titer))),
+# for ZIKV cyno, the LOD was 10 so 5 for those positive after passage only
+# 0 not included here
+zikv_cy_titer <- c(c(60,1500,460,1300,10300,9200,3100), # UGZ626
+                   c(5,30,70,160,10,1500,4600,70,21000,2600), # EC944
+                   c(2600,370,22000,210,830)) # FR1221
+
+df <- data.frame(titer = c(denv_sq_titer, denv_cy_titer,
+                           zikv_sq_titer, zikv_cy_titer),
+                 virus = c(rep("Dengue virus",length(denv_sq_titer)),
+                           rep("Dengue virus",length(denv_cy_titer)),
+                           rep("Zika virus", length(zikv_sq_titer)),
+                           rep("Zika virus", length(zikv_cy_titer))),
+                 NHP = c(rep("Squirrel",length(denv_sq_titer)),
+                         rep("Cyno",length(denv_cy_titer)),
+                         rep("Squirrel", length(zikv_sq_titer)),
+                         rep("Cyno", length(zikv_cy_titer))),
                  ID = c(c(rep(6314,3),
                         rep(6519,4),
                         rep(4516,4),
@@ -197,7 +237,10 @@ df <- data.frame(titer = c(denv_titer, denv_titer_cyno, zikv_titer),
                                                          rep(6359,7),
                                                          rep(5730,4),
                                                          rep(4683,6),
-                                                         rep(4728,8))))
+                                                         rep(4728,8)),
+                                                                    c(rep("UGZ626",7),
+                                                                       rep("EC944",10),
+                                                                       rep("FR1221",5))))
 
 # Assign titers positive only after passage a value of half LOD : 20 
 # not showed : we also tried sampling random values between 1 and 39
@@ -252,7 +295,8 @@ ci_upr
 ```{r}
 #| label: dose-delivered
 #| echo: false
-denv_titer <- c(c(39,39,0), # id 6314
+
+denv_sq_titer <- c(c(39,39,0), # id 6314
                 c(40,39,39,39), # id 6519
                 c(40,838,679,39), # id 4516
                 c(1836,39,0), # id 5045
@@ -263,7 +307,7 @@ denv_titer <- c(c(39,39,0), # id 6314
                 c(160,40,39,39), # id 6242 : titer = 40 was negative post passage
                 c(40,40,40,80,39)) # id 5910
 
-denv_titer_cyno <- c(c(39), # id SB393, negative even post-passage but initiated a PRNT response
+denv_cy_titer <- c(c(39), # id SB393, negative even after passage but initiated a PRNT response
                      c(39), # id FR469A
                      c(39), # id BC407
                      c(39), # id CP60
@@ -273,7 +317,7 @@ denv_titer_cyno <- c(c(39), # id SB393, negative even post-passage but initiated
                      c(39,39,39,39,0,0,0,0,0), # id FR840
                      c(39,39,39,0,0,0,0)) # id BC167
 
-zikv_titer <- c(c(160,639,279,1238,1158,39,0,0,0), # id 6550
+zikv_sq_titer <- c(c(160,639,279,1238,1158,39,0,0,0), # id 6550
                 c(639,0,0,0,0), # id 6518
                 c(2076,1078,1557,39,39,0,0,0,0,0), # id 6311
                 c(918,639,639,240,120,80,40,240,3990,679,39), # id 5013
@@ -284,13 +328,22 @@ zikv_titer <- c(c(160,639,279,1238,1158,39,0,0,0), # id 6550
                 c(1437,120,479,878,160,39), # id 4683
                 c(918,2275,798,838,2275,40,1277,39)) # id 4728
 
-df <- data.frame(titer = c(denv_titer, denv_titer_cyno, zikv_titer),
-                 virus = c(rep("Dengue virus",length(denv_titer)),
-                           rep("Dengue virus",length(denv_titer_cyno)),
-                           rep("Zika virus", length(zikv_titer))),
-                 NHP = c(rep("Squirrel",length(denv_titer)),
-                         rep("Cyno",length(denv_titer_cyno)),
-                         rep("Squirrel", length(zikv_titer))),
+# for ZIKV cyno, the LOD was 10 so 5 for those positive after passage only
+# 0 not included here
+zikv_cy_titer <- c(c(60,1500,460,1300,10300,9200,3100), # UGZ626
+                   c(5,30,70,160,10,1500,4600,70,21000,2600), # EC944
+                   c(2600,370,22000,210,830)) # FR1221
+
+df <- data.frame(titer = c(denv_sq_titer, denv_cy_titer,
+                           zikv_sq_titer, zikv_cy_titer),
+                 virus = c(rep("Dengue virus",length(denv_sq_titer)),
+                           rep("Dengue virus",length(denv_cy_titer)),
+                           rep("Zika virus", length(zikv_sq_titer)),
+                           rep("Zika virus", length(zikv_cy_titer))),
+                 NHP = c(rep("Squirrel",length(denv_sq_titer)),
+                         rep("Cyno",length(denv_cy_titer)),
+                         rep("Squirrel", length(zikv_sq_titer)),
+                         rep("Cyno", length(zikv_cy_titer))),
                  ID = c(c(rep(6314,3),
                         rep(6519,4),
                         rep(4516,4),
@@ -317,7 +370,10 @@ df <- data.frame(titer = c(denv_titer, denv_titer_cyno, zikv_titer),
                                                          rep(6359,7),
                                                          rep(5730,4),
                                                          rep(4683,6),
-                                                         rep(4728,8))))
+                                                         rep(4728,8)),
+                                                                    c(rep("UGZ626",7),
+                                                                       rep("EC944",10),
+                                                                       rep("FR1221",5))))
 
 
 # Assign titers positive only after passage a value of half LOD : 20 
@@ -331,7 +387,6 @@ dose_fixLOD <- df_fixLOD %>% group_by(ID) %>% mutate(dose = sum(titer)) %>% ungr
 
 dose_fixLOD <- unique(dose_fixLOD[,c("ID","NHP","virus","dose")])
 dose_fixLOD$log_dose <- log10(dose_fixLOD$dose) # +1 is no longer necessary
-dose_fixLOD$group <- interaction(dose_fixLOD$NHP,dose_fixLOD$virus)
 dose_fixLOD$virus <- as.factor(dose_fixLOD$virus)
 
 # Distinguish exposure groups
@@ -340,7 +395,9 @@ dose_fixLOD[dose_fixLOD$ID %in% c("SB393","FR469A","BC407","CP60"),]$treatment <
 dose_fixLOD[dose_fixLOD$ID %in% c("BC116A","FR423A","SB395","FR840","BC167"),]$treatment <- "10Mosq"
 
 dose_fixLOD$group <- interaction(dose_fixLOD$NHP,dose_fixLOD$treatment,dose_fixLOD$virus)
-dose_fixLOD <- within(dose_fixLOD, group <- relevel(group, ref = "Squirrel.15Mosq.Dengue virus"))
+dose_fixLOD$group <- gsub(" ","_",dose_fixLOD$group) # no space for posthoc test to work
+dose_fixLOD$group <- as.factor(dose_fixLOD$group)
+dose_fixLOD <- within(dose_fixLOD, group <- relevel(group, ref = "Squirrel.15Mosq.Dengue_virus"))
 
 # Model
 model <- glmmTMB(log_dose ~ group,
@@ -352,11 +409,25 @@ testDispersion(model)
 plot(allEffects(model, partial.residuals = T))
 summary(model)
 
+# select only the biologically relevant comparisons
+tuk = glht(model, linfct = mcp(group = c("Cyno.10Mosq.Dengue_virus - Squirrel.15Mosq.Dengue_virus = 0",
+                                         "Cyno.10Mosq.Dengue_virus - Cyno.1Mosq.Dengue_virus = 0",
+                                          "Cyno.15Mosq.Zika_virus - Squirrel.15Mosq.Zika_virus = 0",
+                                          "Squirrel.15Mosq.Dengue_virus - Squirrel.15Mosq.Zika_virus = 0",
+                                          "Cyno.10Mosq.Dengue_virus - Cyno.15Mosq.Zika_virus = 0"))) 
+summary(tuk, test = adjusted("none"))
+summary(tuk, test = adjusted("fdr")) # benjamini-hochberg (false discovery rate) correction
+
+ggplot(dose_fixLOD) + geom_jitter(aes(x = group, y = log_dose)) +
+  geom_boxplot(aes(x = group, y = log_dose),
+               fill = NA)
+
 # Mean proba (response scale) and CI for each group
-new_dat <- data.frame(group = c("Squirrel.15Mosq.Dengue virus",
-                                "Cyno.10Mosq.Dengue virus",
-                                "Cyno.1Mosq.Dengue virus",
-                                "Squirrel.15Mosq.Zika virus"))
+new_dat <- data.frame(group = c("Squirrel.15Mosq.Dengue_virus",
+                                "Cyno.10Mosq.Dengue_virus",
+                                "Cyno.1Mosq.Dengue_virus",
+                                "Squirrel.15Mosq.Zika_virus",
+                                "Cyno.15Mosq.Zika_virus"))
 pp <- predict(model, se.fit = TRUE, newdata = new_dat)
 ci_lwr <- with(pp, fit + qnorm(0.025)*se.fit)
 ci_upr <- with(pp, fit + qnorm(0.975)*se.fit)

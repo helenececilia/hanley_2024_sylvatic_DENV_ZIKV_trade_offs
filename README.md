@@ -65,4 +65,4 @@ Duong, V. et al. Asymptomatic humans transmit dengue virus to mosquitoes. *Proc.
 
 ten Bosch, Q. A. et al. Contributions from the silent majority dominate dengue virus transmission. *PLOS Pathogens* **14**, e1006965 (2018).
 
-Long, K. C. et al. Feasibility of feeding Aedes aegypti mosquitoes on dengue virus-infected human volunteers for vector competence studies in Iquitos, Peru. *\textit{*PLoS Negl Trop Dis* **13**, e0007116 (2019).
+Long, K. C. et al. Feasibility of feeding Aedes aegypti mosquitoes on dengue virus-infected human volunteers for vector competence studies in Iquitos, Peru. *PLoS Negl Trop Dis* **13**, e0007116 (2019).

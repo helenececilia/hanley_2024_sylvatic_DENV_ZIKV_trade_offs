@@ -336,7 +336,7 @@ optim_Hill <- function(dataset, betabinom=FALSE, verbose = TRUE){
   return(model_Hill)
 }
 
-# Convert from RNA-emia (in the initial papers for DENV) to PFU, using Blaney et al. 2005 (hard-coded)
+# Convert from RNA-emia (in the DENV papers by Nguyen et al. and Duong et al.) to PFU, using Blaney et al. 2005 (hard-coded)
 # returns the data (for plots)
 conversion_and_small_values_correction <- function(data, serotype = NULL, solution){
   conversion_factor <- c(1.9,2.8,2.5,1.9) # from Blaney et al. 2005
@@ -360,7 +360,7 @@ conversion_and_small_values_correction <- function(data, serotype = NULL, soluti
   return(data_convert)
 }
 
-# Convert from RNA-emia (in the initial papers for DENV) to PFU, using Blaney et al. 2005 (hard-coded)
+# Convert from RNA-emia to PFU, using Blaney et al. 2005 (hard-coded)
 # then performs functional form selection
 dose_resp_conversion_and_selection <- function(data, serotype = NULL, solution, filename, verbose = TRUE){
   conversion_factor <- c(1.9,2.8,2.5,1.9) # from Blaney et al. 2005
@@ -508,4 +508,82 @@ compute_uncertainty_dose_resp <- function(best_model, samples, LogV_vector, fct,
               "fit" = fit, "dose50_estim" = dose50_estim))
 }
 
-
+# For dose-response relationship fitted using nls
+# computes uncertainty around the curve by sampling many trajectories and extracting quantiles
+compute_uncertainty_dose_resp_NLS <- function(model, samples, LogV_vector,
+                                              type = "manual",
+                                              fct = "SSlogis",
+                                              name = "viremia_deduced"){
+  Prob <- matrix(NA,ncol = length(LogV_vector), nrow = samples)
+  newDat <- data.frame(LogV_vector)
+  colnames(newDat) <- name
+  
+  if(type == "manual"){
+    MV.Coefs = rmvn(n=samples, mu = coef(model), V = vcov(model))
+    if(fct != "SSfpl"){ # SSlogis and custom function both have 3 params
+      Reg <- cbind(MV.Coefs[,1], MV.Coefs[,2], MV.Coefs[,3]) #; colnames(Reg.leg) <- c("Ints", "Coefs")
+    }else if(fct == "SSfpl"){
+      Reg <- cbind(MV.Coefs[,1], MV.Coefs[,2], MV.Coefs[,3], MV.Coefs[,4]) 
+    }
+    # Prob <- numeric()
+    # browser()
+    for (ii in 1:samples){
+      if(fct == "SSlogis"){
+        # Prob  <- cbind(Prob, SSlogis(Asym = Reg[ii,1],
+        #                              xmid = Reg[ii,2],
+        #                              scal = Reg[ii,3],
+        #                              input = LogV_vector))
+        replicate <- SSlogis(Asym = Reg[ii,1],
+                             xmid = Reg[ii,2],
+                             scal = Reg[ii,3],
+                             input = LogV_vector)
+        Prob[ii,] = replicate
+        # This way we don't vary parameters of the host titer-leg titer relationship (MV_coefs.leg)
+        # Prob.leg  <- cbind(Prob.leg, predict(leg_fit, newdata = data.frame(Viremia_pfu = Viremia.mod[,ii])))
+      }else if(fct == "SSfpl"){
+        replicate <- SSfpl(A = Reg[ii,1],
+                           B = Reg[ii,2],
+                           xmid = Reg[ii,3],
+                           scal = Reg[ii,4],
+                           input = LogV_vector)
+        Prob[ii,] = replicate
+      }else if(fct == "custom"){
+        replicate <- (1+exp(Reg[ii,1] + Reg[ii,2] * LogV_vector))/Reg[ii,3]
+        Prob[ii,] = replicate
+      }
+    }
+    
+    fit <- predict(model, newdata = newDat)
+    traj <- matrix_to_stack(Prob,
+                            col_to_col = "log_V", row_to_col = "id",
+                            value_col = "leg_titer")
+    traj$log_V <- rep(LogV_vector, each = samples)
+    
+    envelope <- NULL
+    for(i in seq(length(LogV_vector))){
+      time_point <- Prob[,i]
+      
+      max95_time <- quantile(time_point, probs = 0.975, na.rm = T) 
+      min95_time <- quantile(time_point, probs = 0.025, na.rm = T)
+      
+      envelope <- rbind(envelope, data.frame(dose = LogV_vector[i],
+                                             min_95 = min95_time,
+                                             max_95 = max95_time,
+                                             fit = fit[i]))
+      
+    }
+    return(list("traj" = traj, "envelope" = envelope,
+                "fit" = fit, "params" = Reg))
+  }else if(type == "predFit"){
+    # browser()
+    conf_int <- investr::predFit(model, interval = "confidence", level = 0.95,
+                                 newdata = newDat)
+    conf_int <- as.data.frame(conf_int)
+    conf_int$vir <- LogV_vector
+    pred_int <- investr::predFit(model, interval = "prediction", level = 0.95,
+                                 newdata = newDat)
+    pred_int <- as.data.frame(pred_int)
+    pred_int$vir <- LogV_vector
+    return(list("pred_int" = pred_int, "conf_int" = conf_int))
+  }
+}

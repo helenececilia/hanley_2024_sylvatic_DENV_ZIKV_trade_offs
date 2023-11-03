@@ -15,14 +15,12 @@ library(tidyverse)
 library(bbmle) # for mle2
 library(emdbook) # for dbetabinom
 library(ggplot2)
-# library(nls2)
 library(mgcv) # for rmvn, gam
 library(scales) # for alpha function
 library(funrar) # for matrix_to_stack
 library(readxl)
 library(patchwork)
 library(tmvtnorm) # for truncated multi variate normal rtmvnorm
-# library(investr) # for predFit
 library(DHARMa)
 library(effects)
 library(nlstools)
@@ -32,9 +30,6 @@ library(janitor) # for clean_names
 ## Set Work Directory ------------------------------------------------------
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
 getwd()
-
-## Load source files ------------------
-#source('.R')
 
 ## Global command
 `%notin%` <- Negate(`%in%`)
@@ -153,6 +148,8 @@ labels <- c(breaks, rep("", n_breaks))
 shapes <- c(rep(16, n_breaks), rep(6, n_breaks))
 breaks2 <- rep(breaks, 2)
 
+df_den$NHP <- factor(df_den$NHP, levels = c("Squirrel","Cyno")) # change order of legend
+
 p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
                                linewidth = 1.3) +
   geom_point(data = df_den,
@@ -164,11 +161,13 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
   annotate(geom = "text", label = "LOD",
            color = "darkgrey", size = 8,
            x = 1.57, y = 0.96) +
-  scale_shape_manual(name = "Monkey species",
+  scale_shape_manual(name = bquote(bold("Monkey species")),
                      values = c("Squirrel" = 16,
-                                "Cyno" = 6)) +
+                                "Cyno" = 6),
+                     labels = c("Squirrel monkeys",
+                                "Cynomolgus macaques")) +
   guides(shape = guide_legend(order = 1,
-                              override.aes = list(size = 3))) +
+                              override.aes = list(size = 4))) +
   coord_cartesian(ylim = c(0,1), xlim = c(0,6.35)) +
   scale_x_continuous(breaks = seq(0,6.35),
                      expand = expansion(add = 0.06)) +
@@ -181,7 +180,7 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
   theme_classic() +
   labs(x = bquote("Dengue virus titer ("*log[10]~"PFU/ml)"),
        y = "Prob mosquito infection",
-       size = "N mosq. titered") + 
+       size = bquote(bold("N mosq. titered"))) + 
   theme(axis.text = element_text(size = 25),
         axis.title.y = element_text(size = 26,
                                     margin = margin(r=20)),
@@ -189,10 +188,10 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
                                     margin = margin(t=15)),
         legend.text = element_text(size = 25),
         legend.title = element_text(size = 26),
-        legend.position = c(0.85,0.75),
+        legend.position = c(0.8,0.75),
         legend.background = element_rect(color = NA, fill = NA))
 
-plot(p_den)
+# plot(p_den)
 
 
 # ZIKA ----
@@ -223,7 +222,7 @@ zikv_sq_inf$disease_class <- "unknown"
 zikv_sq_inf$serotype <- NA
 
 ## ZIKV cyno data ----
-df_tmp <- read.csv("../data/Table_SX_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+df_tmp <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                    dec = ".", sep = "\t")
 
 df_tmp <- df_tmp %>% clean_names()
@@ -247,18 +246,14 @@ zikv_cy_inf$paper <- "zikv"
 zikv_cy_inf$disease_class <- "unknown"
 zikv_cy_inf$serotype <- NA
 
-## Merging datasets OR NOT (try both) ----
+## Merging datasets ----
 zikv_sq_inf$NHP <- "Squirrel"
 zikv_cy_inf$NHP <- "Cyno"
 
 df_zik <- rbind(zikv_cy_inf,
                 zikv_sq_inf)
 
-# df_zik <- zikv_cy_inf
-# 
-# df_zik <- zikv_sq_inf
-
-# General additive model : NOT UPDATED YET ----
+# General additive model ----
 
 # mod_zik <- gam(cbind(k,N-k) ~ s(log_V, k = 6),
 #                data = df_zik,
@@ -276,7 +271,6 @@ df_zik <- rbind(zikv_cy_inf,
 mod_zik <- readRDS("../output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/GAM_zika.rds")
 
 summary(mod_zik)
-# Below is the summary when squirrel and cynos are merged
 # Family: binomial 
 # Link function: logit 
 # 
@@ -307,6 +301,8 @@ pred_nl_zik <- predict(mod_zik, type = "response",
 pred_zik <- data.frame(log_V = seq(0,6.3,length.out = 75),
                        pred_proba = pred_nl_zik)
 
+df_zik$NHP <- factor(df_zik$NHP, levels = c("Squirrel","Cyno")) # change order of legend
+
 p_zik <- ggplot() +   geom_vline(xintercept = log10(21), color = "darkgrey",
                                  linewidth = 1.3) +
   geom_point(data = df_zik,
@@ -318,10 +314,12 @@ p_zik <- ggplot() +   geom_vline(xintercept = log10(21), color = "darkgrey",
   annotate(geom = "text", label = "LOD",
            color = "darkgrey", size = 8,
            x = 1.57, y = 0.96) +
-  scale_shape_manual(name = "Monkey species",
+  scale_shape_manual(name = bquote(bold("Monkey species")),
                      values = c("Squirrel" = 16,
-                                "Cyno" = 6)) +
-  guides(shape = guide_legend(override.aes = list(size = 3))) +
+                                "Cyno" = 6),
+                     labels = c("Squirrel monkeys",
+                                "Cynomolgus macaques")) +
+  guides(shape = guide_legend(override.aes = list(size = 4))) +
   coord_cartesian(ylim = c(0,1), xlim = c(0,6.35)) +
   scale_x_continuous(breaks = seq(0,6.35),
                      expand = expansion(add = 0.06)) +
@@ -331,7 +329,7 @@ p_zik <- ggplot() +   geom_vline(xintercept = log10(21), color = "darkgrey",
   theme_classic() +
   labs(x = bquote("Zika virus titer ("*log[10]~"PFU/ml)"),
        y = "Prob mosquito infection",
-       size = "N mosq. titered") + 
+       size = bquote(bold("N mosq. titered"))) + 
   theme(axis.text = element_text(size = 25),
         axis.title.y = element_text(size = 26,
                                     margin = margin(r = 20,)),
@@ -342,13 +340,13 @@ p_zik <- ggplot() +   geom_vline(xintercept = log10(21), color = "darkgrey",
         legend.position = "none",
         legend.background = element_rect(color = NA, fill = NA))
 
-plot(p_zik)
+# plot(p_zik)
 
 # Assemble DENV and ZIKV plots -----
 p <- (p_den / p_zik)
 p <- p + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size = 23),
                                                    plot.tag.position = c(0.14,0.98))
-png(filename = "../output/figures/main/Figure_4_ZIKV_merge_cyno_squirrel.png",
+png(filename = "../output/figures/main/Figure_5.png",
     width = 900, height = 1200)
 print(p)
 dev.off()

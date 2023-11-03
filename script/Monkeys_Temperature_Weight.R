@@ -23,8 +23,6 @@ library(DHARMa)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
 getwd()
 
-## Load source files ------------------
-#source('.R')
 
 ## Global command
 `%notin%` <- Negate(`%in%`)
@@ -56,7 +54,7 @@ treat2 <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                    dec = ".", sep  ="\t")
 treat3 <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                    dec = ".", sep  ="\t")
-treat4 <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
+treat4 <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                    dec = ".", sep  ="\t")
 
 treat1 <- unique(treat1[,c("ID","Final.Treatment")])
@@ -224,7 +222,7 @@ df2 <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                 dec = ".", sep  ="\t")
 df3 <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                 dec = ".", sep  ="\t")
-df4 <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
+df4 <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                    dec = ".", sep  ="\t")
 
 df1 <- df1[,c("ID","Final.Treatment","Day.Post.Infection","Weight..kg.")]

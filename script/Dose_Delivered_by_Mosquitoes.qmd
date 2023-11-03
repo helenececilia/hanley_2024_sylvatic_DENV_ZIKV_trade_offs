@@ -15,7 +15,8 @@ library(ggplot2)
 library(tidyverse)
 library(BAS)
 library(patchwork)
-library(cowplot)
+library(cowplot) # for draw_image
+library(magick) # for draw_image
 library(gghalves)
 library(ggpubr)
 library(car) # for leveneTest
@@ -36,9 +37,8 @@ library(multcomp) # for glht
 
 
 ## Set Work Directory ------------------------------------------------------
-# Causes an error when rendering : RStudio not running
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location 
-# getwd()
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
+getwd()
 
 ## Global command
 `%notin%` <- Negate(`%in%`)
@@ -51,7 +51,8 @@ library(multcomp) # for glht
 denv_squirrel_total <- rep(15,10)
 denv_squirrel_fed <- c(3,4,5,4,3,4,5,4,4,6)
 
-zikv_squirrel_total <- rep(15,10)
+# 14 mosquitoes instead of 15 in one case
+zikv_squirrel_total <- c(15,15,15,14,15,15,15,15,15,15)
 zikv_squirrel_fed <- c(9,5,10,11,4,6,7,4,7,9)
 
 denv_cyno_total <- c(1,1,1,1,10,10,10,10,10)
@@ -104,7 +105,15 @@ df_high <- within(df_high, group <- relevel(group, ref = "Squirrel.Dengue_virus"
 # as an estimate of the true number of infectious bites received
 df_high$prop_surv <- df_high$pos/df_high$fed_surv 
 df_high$pos_corr <- round(df_high$prop_surv * df_high$fed)
+# difference between observed and estimated number of positive bites
+df_high$pos - df_high$pos_corr
 
+df_high %>% group_by(group) %>% summarise(mean = mean(pos_corr),
+                                          min = min(pos_corr),
+                                          max = max(pos_corr))
+
+
+# For this part we decided to remain purely descriptive but here's the code if you want to run proper tests ----
 model <- glmmTMB(pos_corr ~ group,
                  family = poisson,
                  data = df_high)
@@ -161,7 +170,11 @@ ci_upr
 
 # Saliva titers of mosquitoes infecting NHP ----
 # using titers rounded as integers 
-# for those positive only after passage, we put 39 for now
+
+# For the first 3 exp (all except ZIKV cyno)
+# for those positive only after passage, we put 39 for now (LOD - 1)
+# For ZIKV cyno
+# one positive only after passage, keep LOD/2 = 5
 
 denv_sq_titer <- c(c(39,39,0), # id 6314
                 c(40,39,39,39), # id 6519
@@ -242,14 +255,16 @@ df <- data.frame(titer = c(denv_sq_titer, denv_cy_titer,
                                                                        rep("EC944",10),
                                                                        rep("FR1221",5))))
 
+# For all except ZIKV cyno : 
 # Assign titers positive only after passage a value of half LOD : 20 
-# not showed : we also tried sampling random values between 1 and 39
+# we also tried sampling random values between 1 and 39 (for Levene's test)
 # it improved model residuals but didn't change the conclusions
 df_fixLOD <- df
 df_fixLOD$titer[df_fixLOD$titer == 39] <- 20
 
 # Exclude the zeros
 df_fixLOD <- df_fixLOD[df_fixLOD$titer != 0,]
+log10(mean(df_fixLOD$titer))
 
 df_fixLOD$log_titer <- log10(df_fixLOD$titer) 
 df_fixLOD$group <- interaction(df_fixLOD$NHP,df_fixLOD$virus)
@@ -257,7 +272,71 @@ df_fixLOD$group <- interaction(df_fixLOD$NHP,df_fixLOD$virus)
 df_fixLOD$virus <- as.factor(df_fixLOD$virus)
 df_fixLOD <- within(df_fixLOD, virus <- relevel(virus, ref = "Dengue virus"))
 
-# Model 
+# Figure for a conference
+# p <- ggplot(df_fixLOD, aes(x = virus, y = log_titer)) +
+#   geom_boxplot(outlier.shape = NA) + 
+#   geom_jitter(aes(fill = virus,
+#                   color = virus,
+#                   shape = virus),
+#               size = 7,
+#               alpha = 0.7,
+#               width = 0.3) +
+#   scale_fill_manual(values = c("Dengue virus" = "#1c812b",
+#                                 "Zika virus" = "#253dbe")) +
+#   scale_color_manual(values = c("Dengue virus" = "#1c812b",
+#                                 "Zika virus" = "#253dbe")) +
+#   scale_shape_manual(values = c("Dengue virus" = 21,
+#                                 "Zika virus" = 22)) +
+#   labs(y = bquote("Mosquito saliva titer ("*log[10]~"PFU/ml)"),
+#        x = "",
+#        fill = "Mosquito status",
+#        color = "Mosquito status",
+#        shape = "Mosquito status") +
+#   guides(fill = guide_legend(override.aes = list(alpha = 1))) +
+#     theme_cowplot() +
+#   # theme_classic() +
+#   theme(axis.text.x = element_blank(),
+#         axis.text.y = element_text(size = 30),
+#         axis.title.y = element_text(size = 38,
+#                                     margin = margin(r = 20)),
+#         legend.position = c(0.95,0.27),
+#         plot.margin = unit(c(0,7.5,0,0.35), "cm"),
+#         legend.text = element_text(size = 38),
+#         legend.title = element_text(size = 38))
+# 
+# img_mosq <- magick::image_read("~/Documents/POSTDOC/Presentations/Images/mosquito_outline.png")
+# 
+# p_draw <- ggdraw() + 
+#   draw_plot(p) +
+#   draw_image(image = img_mosq, 
+#              x = 0.1, y = 0.8, scale = 0.15,
+#              valign = 0, halign = 0)
+# 
+# png(filename = here("output","TropMed23","saliva_titer_per_virus.png"),
+#     width = 1600, height = 750)
+# print(p_draw)
+# dev.off()
+
+# the variability for DENV is probably underestimated because we put the same value (LOD/2) for all < LOD
+# but changing to a random value between 0 and LOD is also artificial, although it is more conservative : it likely overestimates the variability, so if it still detects lower variability in the DENV group, it's likely true
+# only one value for ZIKV cyno so half LOD (5) is fine
+df_randomLOD <- df
+n_draw <- length(df_randomLOD$titer[df_randomLOD$titer == 39])
+df_randomLOD$titer[df_randomLOD$titer == 39]<- runif(n_draw,1,39)
+df_randomLOD$log_titer <- log10(df_randomLOD$titer)
+df_randomLOD <- df_randomLOD[df_randomLOD$titer != 0,]
+
+hist(df_randomLOD$log_titer)
+shapiro.test(df_randomLOD$log_titer) # not normal but should be fine for Levene
+ggplot(df_randomLOD, aes(x = virus, y = log_titer)) +
+  geom_boxplot(outlier.shape = NA) + geom_jitter(aes(color = virus))
+summary(as.factor(df_randomLOD$virus)) # unbalanced but should be fine for Levene
+
+# all signif
+leveneTest(titer ~ virus, data = df_randomLOD)
+leveneTest(log_titer ~ virus, data = df_randomLOD)
+
+# Model - fixed LOD ----
 m0 <- glmmTMB(log_titer ~ virus, data = df_fixLOD)
 
 simulateResiduals(m0, plot = T) 
@@ -277,9 +356,29 @@ anova(m0,m1) # m1 prefered (dispersion term significant, see summary)
 
 summary(m1)
 
+# Model - random LOD (to be consistent with variance analysis) ----
+m2 <- glmmTMB(log_titer ~ virus, data = df_randomLOD)
+
+simulateResiduals(m2, plot = T) 
+# issues
+plotResiduals(m2, form = model.frame(m2)$virus) 
+testDispersion(m2) 
+# not signif
+
+m3 <- glmmTMB(log_titer ~ virus,
+              data = df_randomLOD,
+              dispformula = ~ virus)
+
+simulateResiduals(m3, plot = T) 
+# no issues 
+
+anova(m2,m3) # m3 prefered 
+
+summary(m3)
+
 # Mean proba (response scale) and CI for each group
 new_dat <- data.frame(virus = c("Dengue virus","Zika virus"))
-pp <- predict(m1, se.fit = TRUE, newdata = new_dat)
+pp <- predict(m3, se.fit = TRUE, newdata = new_dat)
 ci_lwr <- with(pp, fit + qnorm(0.025)*se.fit)
 ci_upr <- with(pp, fit + qnorm(0.975)*se.fit)
 means <- with(pp, fit)
@@ -399,6 +498,11 @@ dose_fixLOD$group <- gsub(" ","_",dose_fixLOD$group) # no space for posthoc test
 dose_fixLOD$group <- as.factor(dose_fixLOD$group)
 dose_fixLOD <- within(dose_fixLOD, group <- relevel(group, ref = "Squirrel.15Mosq.Dengue_virus"))
 
+dose_fixLOD %>% group_by(group) %>% summarise(mean = log10(mean(10**log_dose)),
+                                          min = min(log_dose),
+                                          max = max(log_dose))
+
+# For this part we decided to remain purely descriptive but here's the code if you want to run proper tests ----
 # Model
 model <- glmmTMB(log_dose ~ group,
                  data = dose_fixLOD)

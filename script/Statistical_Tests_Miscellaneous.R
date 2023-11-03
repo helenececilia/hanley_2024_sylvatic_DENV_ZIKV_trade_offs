@@ -33,38 +33,10 @@ getwd()
 ## -------------------------------
 
 # Cynomolgus macaques / ZIKV ----
-## REPLACEMENT PROPOSED : Relationship between number of mosquitoes salivating virus and total dose delivered ----
-# Dose really similar between individuals / does not seem useful as is. 
-# Should we replace by comparison of variability of mosquito saliva titers, by virus?
-df <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
-               sep = "\t", dec = ".")
 
-df <- df %>% clean_names()
-df <- df[df$final_treatment != "Control",]
-df <- df[df$day_post_infection == 0,]
-df <- df[,c("id",
-            "number_of_mosquitoes_with_detectable_zikv_in_collected_saliva",
-            "number_it_injected_mosquitoes_with_saliva_positive_for_zikv_after_one_passage_of_saliva_in_c6_36_cells",
-            "raw_estimated_titer_delivered_ffu",
-            "corrected_estimated_titer_delivered_log10")]
-colnames(df) <- c("id","nb_saliva_raw","nb_saliva_passage",
-                  "dose_raw","dose_passage_log10")
-
-ggplot(df) + geom_point(aes(x = nb_saliva_passage, y = dose_passage_log10))
-
-# not done
-
-m1 <- lm(dose_passage_log10 ~ nb_saliva_passage,
-         data = df)
-simulateResiduals(m1, plot = T) # ok
-testDispersion(m1) # ok
-summary(m1)
-confint(m1)
-car::Anova(m1, type = "II")
-
-## DESCRIPTIVE ONLY : Effect of total dose delivered on peak titer of ZIKV ----
-# Doses are too close together : cannot confirm or infirm the hypothetized positive relationship
-df <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
+## Just some data plotting : too few individuals to run tests ----
+# Really close doses and peak titers between individuals
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -72,59 +44,27 @@ df0 <- df[df$day_post_infection == 0,]
 df0 <- df0[,c("id",
               "corrected_estimated_titer_delivered_log10")]
 colnames(df0) <- c("id","dose_passage_log10")
-# UPDATE IF VIREMIA DEDUCED CHANGES
-vir <- df %>% group_by(id) %>% summarise(max_vir_raw = max(viremia_log10_pfu_ml_1, na.rm = T))
-# max_vir_corr = max(viremia_deduced, na.rm = T)
+vir <- df %>% group_by(id) %>% summarise(max_vir_raw = max(viremia_deduced, na.rm = T))
 test <- merge(df0,vir,by = "id")
 
 ggplot(test) + geom_point(aes(x = dose_passage_log10, y = max_vir_raw))
 
-# not done
-m1 <- lm(log10(max_vir_raw) ~ dose_passage_log10,
-         data = test)
-simulateResiduals(m1, plot = T) # ok
-testDispersion(m1) # ok
-summary(m1)
-car::Anova(m1, type = "II")
-
-## DESCRIPTIVE ONLY?  Differences in early % NK cells between ZIKV infected and control cynomolgus macaques ----
-df <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
-               sep = "\t", dec = ".")
-df <- df %>% clean_names()
+# early % NK cells of ZIKV-infected within the range of control cynomolgus macaques ----
 control <- read.csv("../data/Table_S1_Sylvatic_DENV-2_Cynomolgus_Macaques.csv",
                     sep = "\t", dec = ".")
 control <- control %>% clean_names()
 control <- control[control$final_treatment == "Control",]
 control <- control[control$day_post_infection == 1,]
-df <- df[df$day_post_infection == 1,]
-df <- df[,c("id","final_treatment","x_nk_cells")]
+df1 <- df[df$day_post_infection == 1,]
+df1 <- df1[,c("id","final_treatment","x_nk_cells")]
 control <- control[,c("id","final_treatment","x_nk_cells")]
-test <- rbind(df,control)
+test <- rbind(df1,control)
 
 ggplot(test) + geom_jitter(aes(x = final_treatment, y = x_nk_cells)) +
   geom_boxplot(aes(x = final_treatment, y = x_nk_cells),
                fill = NA)
 
-m0 <- lm(x_nk_cells ~ final_treatment,
-         data = test)
-simulateResiduals(m0, plot = T) # ok
-testDispersion(m0) # ok
-summary(m0)
-car::Anova(m0, type = "II")
-
-t.test(x_nk_cells ~ final_treatment,
-       data = test)
-
-
-## DESCRIPTIVE ONLY : Association between early NK cell mobilization and neutralizing antibody titers ----
-# narrow range of NK cells and one uncertain prnt value (>640) / cannot confirm or infirm
-df <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
-               sep = "\t", dec = ".")
-df <- df %>% clean_names()
-df <- df[,c("id","final_treatment","day_post_infection",
-            "x_nk_cells","number_nk_cells","prnt80")]
-# infected only
-df <- df[df$final_treatment != "Control",]
+# early NK cell mobilization and neutralizing antibody titers (PRNT80) 
 df1 <- df[df$day_post_infection == 1,]
 df1 <- df1[,c("id","x_nk_cells")]
 df28 <- df[df$day_post_infection == 28,]
@@ -135,40 +75,16 @@ test$prnt80[test$prnt80 == ">640"] <- "640" #underestimation
 test$prnt80 <- as.numeric(test$prnt80)
 ggplot(test) + geom_point(aes(x = x_nk_cells, y = log10(prnt80)))
 
-# not done
-m0 <- lm(log10(prnt80) ~ x_nk_cells,
-         data = test)
-simulateResiduals(m0, plot = T) # ok
-testDispersion(m0) # ok
-plot(allEffects(m0, partial.residuals = T))
-summary(m0)
-# the two ways of computing the CIs do not give exactly the same results 
-# (one includes 0 and not the other one)
-# we report confint
-confint(m0)
--0.12380 - 1.96*0.05377
--0.12380 + 1.96*0.05377
-car::Anova(m0, type = "II")
 
-## ONLY DO WITH ZIKV SQUIRREL? Relationship between early NK cells and peak virus titer ----
-df <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
-               sep = "\t", dec = ".")
-df <- df %>% clean_names()
-df <- df[df$final_treatment != "Control",]
+# early NK cells and peak virus titer
+# later analyzed combined with squirrel monkeys
 df_nk <- df[df$day_post_infection == 1,c("id","x_nk_cells")]
 df_nk <- df_nk[complete.cases(df_nk),]
-# TMP : VIREMIA DEDUCED MIGHT CHANGE LATER
-df_vir <- df %>% group_by(id) %>% summarise(max_vir = max(viremia_log10_pfu_ml_1, na.rm = T))
+df_vir <- df %>% group_by(id) %>% summarise(max_vir = max(viremia_deduced, na.rm = T))
 test <- merge(df_nk, df_vir,by = "id")
 
 ggplot(test) + geom_point(aes(x = x_nk_cells, y = max_vir))
 
-m0 <- lm(max_vir ~ x_nk_cells,
-         data = test)
-simulateResiduals(m0, plot = T) # ok
-testDispersion(m0) # ok
-summary(m0) 
-car::Anova(m0, type = "II")
 
 # Cynomolgus macaques / DENV ----
 ## Impact of number of mosquitoes with virus-positive saliva on the likelihood of becoming detectably viremic ----
@@ -273,11 +189,12 @@ confint(m0)
 car::Anova(m0, type = "II")
 
 
-# TO DISCUSS : Comparison cynos / ZIKV vs DENV ----
-## DONE (but important caveats) : Differences in PRNT80 values between viruses ----
+# Comparison cynos / ZIKV vs DENV ----
+## Just some data plotting : too few individuals in the ZIKV group to run tests ----
+# PRNT80 values between viruses 
 denv <- read.csv("../data/Table_S1_Sylvatic_DENV-2_Cynomolgus_Macaques.csv",
                  sep = "\t", dec = ".")
-zikv <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
+zikv <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                  sep = "\t", dec = ".")
 denv <- denv %>% clean_names()
 zikv <- zikv %>% clean_names()
@@ -294,29 +211,12 @@ zikv_df28 <- zikv_df28[,c("id","prnt80")]
 zikv_df28$virus <- "ZIKV"
 
 df28 <- rbind(denv_df28, zikv_df28)
-df28$prnt80[df28$prnt80 == ">640"] <- "640" # LOWER BOUND / precise in text
+df28$prnt80[df28$prnt80 == ">640"] <- "640" # LOWER BOUND 
 df28$prnt80 <- as.numeric(df28$prnt80)
 
-m0 <- lm(log10(prnt80) ~ virus,
-         data = df28)
-simulateResiduals(m0, plot = T) # ok
-testDispersion(m0) # ok
-summary(m0)
-car::Anova(m0, type = "II")
-t.test(log10(prnt80) ~ virus,
-       data = df28)
+ggplot(df28) + geom_point(aes(x = virus, y = prnt80))
 
-## DONE (but important caveats) : Differences in early % NK cells between viruses ----
-denv <- read.csv("../data/Table_S1_Sylvatic_DENV-2_Cynomolgus_Macaques.csv",
-                 sep = "\t", dec = ".")
-zikv <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
-                 sep = "\t", dec = ".")
-denv <- denv %>% clean_names()
-zikv <- zikv %>% clean_names()
-
-denv <- denv[denv$final_treatment != "Control",]
-zikv <- zikv[zikv$final_treatment != "Control",]
-
+# Early % NK cells between viruses 
 denv_df <- denv[denv$day_post_infection == 1,]
 denv_df <- denv_df[,c("id","x_nk_cells")]
 denv_df$virus <- "DENV"
@@ -327,64 +227,7 @@ zikv_df$virus <- "ZIKV"
 
 df <- rbind(denv_df, zikv_df)
 
-m0 <- lm(x_nk_cells ~ virus,
-         data = df)
-simulateResiduals(m0, plot= T) # ok
-testDispersion(m0) # ok
-summary(m0)
-car::Anova(m0, type = "II")
-t.test(x_nk_cells ~ virus,
-       data = df)
-# not signif
-
-## DONE (but probably useless) : Differences between viruses in effect of dose on peak viremia ----
-# NO OVERLAP BETWEEN DOSES DENV and ZIKV SO CANNOT DISTINGUISH AN EFFECT OF VIRUS?
-denv <- read.csv("../data/Table_S1_Sylvatic_DENV-2_Cynomolgus_Macaques.csv",
-                 sep = "\t", dec = ".")
-zikv <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
-                 sep = "\t", dec = ".")
-denv <- denv %>% clean_names()
-zikv <- zikv %>% clean_names()
-
-# TEMPORARY, NO VIREMIA DEDUCED YET
-zikv$viremia_deduced <- zikv$viremia_log10_pfu_ml_1
-
-denv <- denv[denv$final_treatment != "Control",]
-zikv <- zikv[zikv$final_treatment != "Control",]
-
-denv$virus <- "DENV"
-zikv$virus <- "ZIKV"
-denv <- denv[,c("id",
-                "virus",
-                "day_post_infection",
-                "viremia_deduced",
-                "corrected_estimated_titer_delivered_log10")]
-zikv <- zikv[,c("id",
-                "virus",
-                "day_post_infection",
-                "viremia_deduced",
-                "corrected_estimated_titer_delivered_log10")]
-df <- rbind(denv,zikv)
-df0 <- df[df$day_post_infection == 0,]
-df0 <- df0[,c("id",
-              "virus",
-              "corrected_estimated_titer_delivered_log10")]
-colnames(df0) <- c("id","virus","dose_passage_log10")
-vir <- df %>% group_by(id,virus) %>% summarise(max_vir = max(viremia_deduced, na.rm = T)) %>% ungroup()
-test <- merge(df0,vir,by = c("id","virus"))
-# max vir already in log
-# test$log_vir_max <- log10(test$max_vir + 1)
-
-m0 <- lm(max_vir ~ dose_passage_log10*virus,
-         data = test)
-simulateResiduals(m0, plot = T) # issues
-testDispersion(m0) # ok
-plot(allEffects(m0, partial.residuals = T))
-M <- aov(m0)
-etaSquared(M) # interaction < 0.01, type II prefered
-car::Anova(m0, type = "II") # nothing signif
-
-# Note : no doses common to DENV and ZIKV monkeys
+ggplot(df) + geom_point(aes(x = virus, y = x_nk_cells))
 
 # Squirrel monkeys / DENV ----
 ## Impact of the dose of DENV delivered on the likelihood of squirrel monkeys becoming viremic ----
@@ -557,58 +400,6 @@ simulateResiduals(m1, plot = T) # ok
 testDispersion(m1) # ok
 summary(m1)
 car::Anova(m1, type = "II")
-
-## Now removed from manuscript because of word limit : Effect of viremia on transmission rate to mosquitoes (saliva) ----
-df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
-               sep = "\t", dec = ".")
-df <- df %>% clean_names()
-df <- df[df$final_treatment != "Control",]
-df <- df[,c("id",
-            "final_treatment",
-            "day_post_infection",
-            "viremia_pfu_ml",
-            "viremia_deduced",
-            "number_of_mosquitoes_that_engorged_and_survived_to_titer",
-            "number_of_mosquitoes_with_positive_saliva_without_amplification",
-            "number_of_mosquitoes_with_positive_saliva_after_amplification")]
-
-df <- df[complete.cases(df$number_of_mosquitoes_with_positive_saliva_without_amplification),]
-df$log_V <- log10(df$viremia_pfu_ml)
-colnames(df) <- c("id",
-                  "final_treatment",
-                  "day_post_infection",
-                  "viremia_pfu_ml",
-                  "viremia_deduced",
-                  "nb_fed_surv",
-                  "nb_saliva_raw",
-                  "nb_saliva_passage",
-                  "log_V")
-
-df$TR_raw <- df$nb_saliva_raw/df$nb_fed_surv
-df$TR_passage <- df$nb_saliva_passage/df$nb_fed_surv
-
-# without monkey 4683
-m0 <- glmmTMB(TR_passage ~ log_V,
-              data = df[df$id != 4683,],
-              weights = nb_fed_surv,
-              family = binomial)
-# warning
-simulateResiduals(m0, plot = T) # ok
-testDispersion(m0) # ok
-summary(m0) 
-exp(confint(m0))
-car::Anova(m0, type = "II") 
-
-# with monkey 4683 (results reported in manuscript)
-m1 <- glmmTMB(TR_passage ~ log_V,
-              data = df,
-              weights = nb_fed_surv,
-              family = binomial)
-simulateResiduals(m1, plot = T) # issues
-testDispersion(m1) # ok
-summary(m1) 
-exp(confint(m1))
-car::Anova(m1, type = "II") 
 
 ## Differences in early % NK cells between ZIKV-infected and control squirrel monkeys ----
 df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
@@ -810,57 +601,45 @@ summary(ms0)
 car::Anova(ms0, type = "II") 
 
 
-# TO DISCUSS: Comparison squirrel - cyno / ZIKV ----
-## ONLY DESCRIPTIVE? : Possible species effect in relationship between early NK cells and PRNT80 during ZIKV infection ----
-df_sq <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
-                  sep = "\t", dec = ".")
-df_sq <- df_sq %>% clean_names()
-df_sq <- df_sq[,c("id","final_treatment","day_post_infection",
-                  "x_nk_cells","number_nk_cells","prnt80")]
-df_sq <- df_sq[df_sq$final_treatment != "Control",]
-df_sq1 <- df_sq[df_sq$day_post_infection %in% c(1,2),]
-df_sq1 <- df_sq1[,c("id","x_nk_cells")]
-df_sq28 <- df_sq[df_sq$day_post_infection == 28,]
-df_sq28 <- df_sq28[,c("id","prnt80")]
-test_sq <- merge(df_sq1,df_sq28, by = "id")
-test_sq <- test_sq[!is.na(test_sq$x_nk_cells),]
-test_sq$species <- "squirrel"
+# Grouped analysis squirrel - cyno / ZIKV ----
+## Relationship between peak viremia and duration ----
+df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+               sep = "\t", dec = ".")
+df <- df %>% clean_names()
+df <- df[df$final_treatment != "Control",]
+vir <- df[!is.na(df$viremia_deduced) & df$viremia_deduced != 0,]
+vir <- vir[,c("id","day_post_infection","viremia_deduced","viremia_pfu_ml")]
+vir$log_V <- log10(vir$viremia_deduced)
+test1 <- vir %>% group_by(id) %>% summarise(max_vir = max(log_V, na.rm = T),
+                                           min_day = min(day_post_infection),
+                                           max_day = max(day_post_infection)) %>%
+  ungroup()
+test1$duration <- (test1$max_day - test1$min_day) +1
 
-df_cy <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
-                  sep = "\t", dec = ".")
-df_cy <- df_cy %>% clean_names()
-df_cy <- df_cy[,c("id","final_treatment","day_post_infection",
-                  "x_nk_cells","number_nk_cells","prnt80")]
-df_cy <- df_cy[df_cy$final_treatment != "Control",]
-df_cy1 <- df_cy[df_cy$day_post_infection == 1,]
-df_cy1 <- df_cy1[,c("id","x_nk_cells")]
-df_cy28 <- df_cy[df_cy$day_post_infection == 28,]
-df_cy28 <- df_cy28[,c("id","prnt80")]
-test_cy <- merge(df_cy1,df_cy28, by = "id")
-test_cy <- test_cy[!is.na(test_cy$x_nk_cells),]
-test_cy$species <- "cyno"
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+               sep = "\t", dec = ".")
+df <- df %>% clean_names()
+df <- df[df$final_treatment != "Control",]
+vir <- df[!is.na(df$viremia_deduced) & df$viremia_deduced != 0,]
+vir <- vir[,c("id","day_post_infection","viremia_deduced","viremia_pfu_ml")]
+vir$log_V <- vir$viremia_deduced # already in log
+test2 <- vir %>% group_by(id) %>% summarise(max_vir = max(log_V, na.rm = T),
+                                           min_day = min(day_post_infection),
+                                           max_day = max(day_post_infection)) %>%
+  ungroup()
+test2$duration <- (test2$max_day - test2$min_day) +1
 
-test <- rbind(test_cy, test_sq)
-test$prnt80[test$prnt80 == ">640"] <- "640" # underestimation
-test$prnt80 <- as.numeric(test$prnt80)
-test$log_prnt <- log10(test$prnt80)
+my_df <- rbind(test1,test2)
+my_df$duration_factor <- as.factor(my_df$duration)
+with_Minerva <- my_df
+no_Minerva <- my_df[my_df$id != 4683,]
 
-ggplot(test) + geom_point(aes(x = x_nk_cells, y = log_prnt,
-                              color = species), alpha = 0.5)
+# Plot : 4683 is at the top right
+ggplot(my_df) + geom_point(aes(x = max_vir, y = duration, color = as.factor(min_day)))
 
-# is this really sensible ?
-m1 <- lm(log_prnt ~ x_nk_cells*species,
-         data = test)
-simulateResiduals(m1, plot = T) # ok
-testDispersion(m1) # ok
-summary(m1) 
-confint(m1)
+# results of ordinal logistic regression reported in manuscript, not run in R
 
-M <- aov(m1)
-etaSquared(M) # interaction > 0.01 so type III preferred?
-car::Anova(m1, type = "III")
-
-## DEPENDS ON THE MODEL : Effect of early % NK cells on peak viremia ----
+## Effect of early % NK cells on peak viremia ----
 df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
@@ -871,14 +650,13 @@ df_vir <- df %>% group_by(id) %>% summarise(max_vir = max(log10(viremia_deduced)
 df_sq <- merge(df_nk, df_vir,by = "id")
 df_sq$species <- "Squirrel"
 
-df <- read.csv("~/Documents/POSTDOC/trade_offs_NMSU/data/ZIKV_Sylv_Cyno/master_ZIKV_Cyno.csv",
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
 df_nk <- df[df$day_post_infection == 1,c("id","x_nk_cells")]
 df_nk <- df_nk[complete.cases(df_nk),]
-# TMP : VIREMIA DEDUCED MIGHT CHANGE LATER
-df_vir <- df %>% group_by(id) %>% summarise(max_vir = max(viremia_log10_pfu_ml_1, na.rm = T))
+df_vir <- df %>% group_by(id) %>% summarise(max_vir = max(viremia_deduced, na.rm = T))
 df_cy <- merge(df_nk, df_vir,by = "id")
 df_cy$species <- "Cyno"
 
@@ -886,20 +664,15 @@ test <- rbind(df_sq, df_cy)
 ggplot(test) + geom_point(aes(x = x_nk_cells, y = max_vir,
                               color = species))
 
-m0 <- lm(max_vir ~ x_nk_cells*species,
-         data = test[test$id != "4683",])
-simulateResiduals(m0, plot = T) # ok
-testDispersion(m0) # ok
-summary(m0) 
-M <- aov(m0)
-etaSquared(M) # interaction > 0.01, type III prefered ?
-car::Anova(m0, type = "III")
-# nothing signif with and without 4683
+m <- lm(max_vir ~ x_nk_cells,
+         data = test)
+simulateResiduals(m, plot = T) # no issues 
+testDispersion(m) # ok 
+summary(m) # not signif negative 
+
 
 m1 <- lm(max_vir ~ x_nk_cells,
          data = test[test$id != "4683",])
 simulateResiduals(m1, plot = T) # issues
 testDispersion(m1) # ok
-summary(m1) 
-car::Anova(m1, type = "II")
-# signif without 4683 / not signif with 4683
+summary(m1) # signif negative

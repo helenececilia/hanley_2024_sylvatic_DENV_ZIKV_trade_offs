@@ -31,6 +31,7 @@ library(monochromeR)
 library(ggtext) # for element_markdown
 library(cowplot)
 library(magick)
+library(glmmTMB)
 
 ## Set Work Directory ------------------------------------------------------
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
@@ -1083,7 +1084,7 @@ labelZ_cy <- paste0((sprintf('%.2f',Z_cy_50)),
                     (sprintf('%.2f',Z_cy_CI[1])),";",(sprintf('%.2f',Z_cy_CI[2])),
                     "]")
 
-legend_title <- bquote(bold("ZIKV " ~ID[50]~"[CI]"))
+legend_title_A <- bquote(bold("ZIKV " ~ID[50]~"[CI]"))
 
 breaks <- c(5, 10, 15)
 n_breaks <- length(breaks)
@@ -1120,10 +1121,10 @@ pz <- ggplot() +
   scale_y_continuous(limits = c(0,1),
                      expand = expansion(add = c(0.02,0.03))) +
   scale_color_manual(values = species_colors[c(1,2)],
-                     name = legend_title,
+                     name = legend_title_A,
                      labels = c(labelZ_cy,labelZ_sq)) +
   scale_fill_manual(values = species_colors[c(1,2)],
-                     name = legend_title,
+                     name = legend_title_A,
                      labels = c(labelZ_cy,labelZ_sq)) +
   scale_size_continuous(limits=c(1,15), range = c(0,10),
                         breaks = breaks2, labels = labels,
@@ -1232,7 +1233,7 @@ D4_CI <- c(D4$envelope$dose[which.min(abs(D4$envelope$max_95-0.5))],
 #            L2$envelope$dose[which.min(abs(L2$envelope$min_95-0.5))])
 # the confidence interval was not satisfying for this one, so I switched to glmmTMB instead
 test <- glmmTMB(k/N ~ log_V, data = long_head_df, weights = N, family = "betabinomial")
-newDat <- data.frame(log_V = predframe)
+newDat <- data.frame(log_V = LogV_vector)
 newDat$N <- 15
 pred <- predict(test, se.fit = T, newdata = newDat)
 newDat$pred <- plogis(pred$fit)

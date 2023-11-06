@@ -1460,7 +1460,7 @@ pd12 <- (p1 | p2d)
 pd24 <- (p2l | p4)
 p <- pz / wrap_elements(full = pd12) / wrap_elements(full = pd24)
 
-png(filename = "../output/figures/main/Figure_5.png",
+png(filename = "../output/figures/main/Figure_6.png",
     width = 1300, height = 1350)
 print(p)
 dev.off()

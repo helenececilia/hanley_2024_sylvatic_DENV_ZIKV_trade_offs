@@ -159,7 +159,8 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
   geom_line(data = pred_den, aes(x = log_V, y = pred_proba),
             color = "#006837", linewidth = 2, alpha = 0.8) +
   annotate(geom = "text", label = "LOD",
-           color = "darkgrey", size = 8,
+           #color = "darkgrey",
+           size = 9,
            x = 1.57, y = 0.96) +
   scale_shape_manual(name = bquote(bold("Monkey species")),
                      values = c("Squirrel" = 16,
@@ -168,9 +169,11 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
                                 "Cynomolgus macaques")) +
   guides(shape = guide_legend(order = 1,
                               override.aes = list(size = 4))) +
-  coord_cartesian(ylim = c(0,1), xlim = c(0,6.35)) +
-  scale_x_continuous(breaks = seq(0,6.35),
-                     expand = expansion(add = 0.06)) +
+  coord_cartesian(ylim = c(0,1), xlim = c(0,5.25)) + # 6.35
+  # scale_x_continuous(breaks = seq(0,6.35),
+  #                    expand = expansion(add = 0.06)) +
+  scale_x_continuous(breaks = seq(0,5.25),
+                     expand = expansion(add = 0.06)) + # Epidemics poster version
   scale_y_continuous(expand = expansion(add = c(0.02,0.03))) +
   scale_size_continuous(limits=c(1,15), range = c(0,10),
                          breaks = breaks2, labels = labels,
@@ -181,22 +184,25 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
   labs(x = bquote("Dengue virus titer ("*log[10]~"PFU/ml)"),
        y = "Prob mosquito infection",
        size = bquote(bold("N mosq. titered"))) + 
-  theme(axis.text = element_text(size = 25),
-        axis.title.y = element_text(size = 26,
+  theme(axis.text = element_text(size = 30),
+        axis.title.y = element_text(size = 35,
                                     margin = margin(r=20)),
-        axis.title.x = element_text(size = 26,
+        axis.title.x = element_text(size = 35,
                                     margin = margin(t=15)),
-        legend.text = element_text(size = 25),
-        legend.title = element_text(size = 26),
-        legend.position = c(0.8,0.75),
+        legend.text = element_text(size = 33),
+        legend.title = element_text(size = 33),
+        legend.position = c(0.71,0.6),
         legend.background = element_rect(color = NA, fill = NA))
 
-# plot(p_den)
+png("~/Documents/POSTDOC/trade_offs_NMSU/output/TropMed23/GAM_TTM_dengue.png",
+    width = 800, height = 520)
+plot(p_den)
+dev.off()
 
 
 # ZIKA ----
 ## ZIKV squirrel data -----
-df_tmp <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df_tmp <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                    dec = ".", sep = "\t")
 
 df_tmp <- df_tmp %>% clean_names()
@@ -222,7 +228,7 @@ zikv_sq_inf$disease_class <- "unknown"
 zikv_sq_inf$serotype <- NA
 
 ## ZIKV cyno data ----
-df_tmp <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+df_tmp <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                    dec = ".", sep = "\t")
 
 df_tmp <- df_tmp %>% clean_names()

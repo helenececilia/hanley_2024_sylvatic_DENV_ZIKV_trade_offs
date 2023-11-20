@@ -53,7 +53,7 @@ save_path <- "../output/result_files/transmission_to_mosquitoes/zika_sylvatic_vs
 #| echo: false
 
 # ZIKV cyno data formatting -----
-df_tmp <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+df_tmp <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                    sep = "\t", dec = ".")
 df_tmp <- df_tmp[,c("ID","Sex","Final.Treatment","Day.Post.Infection","Viremia.deduced",
                     "Number.of.mosquitoes.that.engorged.AND.survived.to.titer",
@@ -89,7 +89,7 @@ zikv_cy_body <- dplyr::filter(zikv_cy_body, !(log_V == 0 & k == 0))
 zikv_cy_leg <- dplyr::filter(zikv_cy_leg, !(log_V == 0 & k == 0))
 
 # ZIKV squirrel data formatting -----
-df_tmp <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df_tmp <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                    sep = "\t", dec = ".")
 df_tmp <- df_tmp[,c("ID","Sex","Final.Treatment","Day.Post.Infection","Viremia.deduced",
                     "Number.of.mosquitoes.that.engorged.AND.survived.to.titer",
@@ -1114,7 +1114,7 @@ pz <- ggplot() +
   geom_point(data = zikv_cy_leg, aes(x = log_V, y = k/N, size = N,
                                  shape = "Cyno"),
              color = "#00DDDD", stroke = 1.5) +
-  ggtitle("A") +
+  # ggtitle("A") +
   theme_classic() +
   scale_x_continuous(limits = c(0,8.15),
                      expand = expansion(add = c(0.05,0.1))) +
@@ -1145,17 +1145,17 @@ pz <- ggplot() +
                             override.aes = list(size = 4,
                                                 color = c("#0000BB","#00DDDD")),
                             byrow = TRUE)) +
-  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"), #Host viral load
        y = "Prob mosquito leg infection",
        size = bquote(bold("N mosq. titered"))) +
   theme_classic() +
   theme(legend.key.width = unit(1,'cm'),
-        axis.text = element_text(size = 32),
-        axis.title.x = element_text(size = 34),
-        axis.title.y = element_text(size = 34,
+        axis.text = element_text(size = 34),
+        axis.title.x = element_text(size = 36),
+        axis.title.y = element_text(size = 36,
                                     margin = margin(r = 15)),
-        legend.text = element_text(size = 32),
-        legend.title = element_text(size = 33),
+        legend.text = element_text(size = 34),
+        legend.title = element_text(size = 35),
         legend.position = "right",
         plot.title = element_text(size = 21),
         plot.margin = margin(t = 10, r = 15, b = 0, l = 5),
@@ -1169,20 +1169,20 @@ pz <- ggplot() +
 # 
 # p_draw <- ggdraw() +
 #   draw_plot(pz) +
-#   draw_image(image = img_squirrel, 
+#   draw_image(image = img_squirrel,
 #               x = 0.15, y = 0.65, scale = 0.14,
 #               valign = 0, halign = 0) +
-#   draw_image(image = img_cyno, 
+#   draw_image(image = img_cyno,
 #               x = 0.52, y = 0.45, scale = 0.14,
 #               valign = 0, halign = 0) +
 #   draw_image(image = img_mosq,
-#              x = 0.225, y = 0.74, scale = 0.08,
+#              x = 0.22, y = 0.735, scale = 0.08,
 #              valign = 0, halign = 0) +
 #   draw_image(image = img_mosq,
-#              x = 0.585, y = 0.58, scale = 0.08,
-#              valign = 0, halign = 0) +
+#              x = 0.58, y = 0.575, scale = 0.08,
+#              valign = 0, halign = 0)
 # 
-# png(filename = "~/Documents/POSTDOC/trade_offs_NMSU/output/TropMed23/fit_CI_data_dose50_leg_ZIKV_squirrel_vs_cyno.png", width = 1600, height = 750)
+# png(filename = "~/Documents/POSTDOC/trade_offs_NMSU/output/TropMed23/Epidemics_dose_resp_leg.png", width = 1600, height = 750)
 # plot(p_draw)
 # dev.off()
 

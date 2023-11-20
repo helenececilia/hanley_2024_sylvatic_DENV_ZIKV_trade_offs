@@ -36,7 +36,7 @@ getwd()
 
 ## Just some data plotting : too few individuals to run tests ----
 # Really close doses and peak titers between individuals
-df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -160,7 +160,7 @@ car::Anova(m1, type = "II")
 t.test(log10(prnt80) ~ final_treatment,
        data = df1)
 
-## Association between early NK cell mobilization and neutralizing antibody titers ----
+## Association between early NK cell mobilization and neutralizing antibody titers : REMOVED ----
 df <- read.csv("../data/Table_S1_Sylvatic_DENV-2_Cynomolgus_Macaques.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
@@ -194,7 +194,7 @@ car::Anova(m0, type = "II")
 # PRNT80 values between viruses 
 denv <- read.csv("../data/Table_S1_Sylvatic_DENV-2_Cynomolgus_Macaques.csv",
                  sep = "\t", dec = ".")
-zikv <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+zikv <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                  sep = "\t", dec = ".")
 denv <- denv %>% clean_names()
 zikv <- zikv %>% clean_names()
@@ -256,7 +256,7 @@ car::Anova(m0, type = "II")
 df <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
-control <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+control <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                     sep = "\t", dec = ".")
 control <- control %>% clean_names()
 control <- control[control$final_treatment == "Control",]
@@ -276,7 +276,7 @@ car::Anova(m0, type = "II")
 t.test(x_nk_cells ~ final_treatment,
        data = test)
 
-## Relationship between early % NK cells and PRNT80 values on Day 28  ----
+## Relationship between early % NK cells and PRNT80 values on Day 28 : REMOVED ----
 df <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
@@ -305,7 +305,6 @@ confint(m2)
 car::Anova(m2, type = "II")
 
 # Comparison squirrel - cyno / DENV ----
-## Possible species effect in relationship between early NK cells and PRNT80 during DENV infection ----
 df_sq <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                   sep = "\t", dec = ".")
 df_sq <- df_sq %>% clean_names()
@@ -337,6 +336,11 @@ test_cy$species <- "cyno"
 test <- rbind(test_cy, test_sq)
 test$log_prnt <- log10(test$prnt80)
 
+## Differences between species, for both NK cells and PRNT80 ----
+t.test(log_prnt ~ species, data = test, var.equal = TRUE)
+t.test(x_nk_cells ~ species, data = test, var.equal = TRUE)
+
+## Possible species effect in relationship between early NK cells and PRNT80 during DENV infection ----
 m1 <- lm(log_prnt ~ x_nk_cells*species,
          data = test)
 simulateResiduals(m1, plot = T) # ok
@@ -351,7 +355,7 @@ car::Anova(m1, type = "II")
 
 # ZIKV - squirrel ----
 ## Relationship between number of mosquitoes salivating virus and total dose delivered ----
-df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -373,7 +377,7 @@ confint(m1)
 car::Anova(m1, type = "II")
 
 ## Effect of total dose delivered peak titer of ZIKV ----
-df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -402,7 +406,7 @@ summary(m1)
 car::Anova(m1, type = "II")
 
 ## Differences in early % NK cells between ZIKV-infected and control squirrel monkeys ----
-df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 control <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                     sep = "\t", dec = ".")
@@ -438,7 +442,7 @@ t.test(x_nk_cells ~ final_treatment,
        data = test[test$id != 4683,])
 
 ## Relationship between early NK cells and peak virus titer ----
-df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -467,7 +471,7 @@ car::Anova(m1, type = "II")
 ## Differences in PRNT80 values between viruses ----
 denv <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                  sep = "\t", dec = ".")
-zikv <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+zikv <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                  sep = "\t", dec = ".")
 denv <- denv %>% clean_names()
 zikv <- zikv %>% clean_names()
@@ -497,7 +501,7 @@ t.test(log10(prnt80) ~ virus,
 ## Differences in early % NK cells between viruses ----
 denv <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                  sep = "\t", dec = ".")
-zikv <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+zikv <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                  sep = "\t", dec = ".")
 denv <- denv %>% clean_names()
 zikv <- zikv %>% clean_names()
@@ -538,7 +542,7 @@ t.test(x_nk_cells ~ virus,
 ## Differences between viruses in effect of dose on peak viremia ----
 denv <- read.csv("../data/Table_S2_Sylvatic_DENV-2_Squirrel_Monkeys.csv",
                  sep = "\t", dec = ".")
-zikv <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+zikv <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                  sep = "\t", dec = ".")
 denv <- denv %>% clean_names()
 zikv <- zikv %>% clean_names()
@@ -603,7 +607,7 @@ car::Anova(ms0, type = "II")
 
 # Grouped analysis squirrel - cyno / ZIKV ----
 ## Relationship between peak viremia and duration ----
-df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -616,7 +620,7 @@ test1 <- vir %>% group_by(id) %>% summarise(max_vir = max(log_V, na.rm = T),
   ungroup()
 test1$duration <- (test1$max_day - test1$min_day) +1
 
-df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -640,7 +644,7 @@ ggplot(my_df) + geom_point(aes(x = max_vir, y = duration, color = as.factor(min_
 # results of ordinal logistic regression reported in manuscript, not run in R
 
 ## Effect of early % NK cells on peak viremia ----
-df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
+df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Squirrel_Monkeys.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]
@@ -650,7 +654,7 @@ df_vir <- df %>% group_by(id) %>% summarise(max_vir = max(log10(viremia_deduced)
 df_sq <- merge(df_nk, df_vir,by = "id")
 df_sq$species <- "Squirrel"
 
-df <- read.csv("../data/Table_S4_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
+df <- read.csv("../data/Table_S3_Sylvatic_ZIKV_Cynomolgus_Macaques.csv",
                sep = "\t", dec = ".")
 df <- df %>% clean_names()
 df <- df[df$final_treatment != "Control",]

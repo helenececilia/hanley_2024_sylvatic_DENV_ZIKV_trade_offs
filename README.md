@@ -43,7 +43,7 @@ The analyses were all performed on a desktop computer (Ubuntu 22.04)
 
 Tables S1, S2, S3, S4 contain most of the data. The .csv files are used by the scripts, and the .xlsx version is provided as it has a separate sheet detailing column information. Temperature files provide temperature every 15 minutes. Other files are extractions of Tables S1-S4 used for easier manipulation in scripts. Although the file names refer to the experiment with the virus name, they also include control monkeys.
 
-The `literature` folder contains data from Nguyen et al. 2013 and Duong et al. 2015, extracted from the supplementary material of ten Bosch et al. 2018, as well as data from Long et al. 2019, used for comparison between ZIKV transmission from non-human primates to Aedes albopictus and DENV transmission from humans to Aedes aegypti.
+The `literature` folder contains data from Nguyen et al. 2013 and Duong et al. 2015, extracted from the supplementary material of ten Bosch et al. 2018, as well as data from Long et al. 2019, used for comparison between ZIKV transmission from non-human primates to *Aedes albopictus* and DENV transmission from humans to *Aedes aegypti*.
 
 ### Output folder
 
@@ -55,7 +55,7 @@ Contains figures from the manuscript (in `main`) and the supplementary informati
 
 Contains detailed results from analysis.
 
-Any questions about this code base can be directed at [helene.cecilia3\@gmail.com](mailto:helene.cecilia3@gmail.com){.email}
+Any questions about this code base can be directed at [helene.cecilia3\@gmail.com](mailto:helene.cecilia3@gmail.com)
 
 ### References
 

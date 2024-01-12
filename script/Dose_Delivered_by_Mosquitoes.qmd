@@ -1,5 +1,5 @@
 ---
-title: "Comparing number of bites and saliva titers of ZIKV- and DENV-infected Aedes albopictus, and estimate dose delivered to squirrel monkeys"
+title: "Comparing number of bites and saliva titers of ZIKV- and DENV-infected Aedes albopictus, and estimate dose delivered to non-human primates"
 author: "Helene Cecilia"
 format: html
 ---

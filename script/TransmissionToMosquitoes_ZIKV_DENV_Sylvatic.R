@@ -26,6 +26,7 @@ library(effects)
 library(nlstools)
 library(glmmTMB)
 library(janitor) # for clean_names
+library(writexl)
 
 ## Set Work Directory ------------------------------------------------------
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
@@ -150,6 +151,7 @@ breaks2 <- rep(breaks, 2)
 
 df_den$NHP <- factor(df_den$NHP, levels = c("Squirrel","Cyno")) # change order of legend
 
+write_xlsx(df_den,"../data/Source_Data_Fig4A.xlsx")
 p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
                                linewidth = 1.3) +
   geom_point(data = df_den,

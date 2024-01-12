@@ -26,7 +26,6 @@ library(investr) # for predFit
 library(DHARMa)
 library(effects)
 library(nlstools)
-library(bbmle) # for mle2, parnames
 library(monochromeR)
 library(ggtext) # for element_markdown
 library(cowplot)

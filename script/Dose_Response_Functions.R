@@ -11,6 +11,7 @@
 ## Date Created: 2022-03-23
 
 ## -------------------------------
+
 # The models : different functional form to describe dose-response -----
 LogFunction = function(log_V, log_beta0, beta1){
   prob_inf = 1 / (1 + exp(-beta1*(log_V - log_beta0)) ) 
@@ -213,13 +214,14 @@ optim_Log <- function(dataset, betabinom=FALSE, verbose = TRUE){
                 overdispersion = 0.1)
     logl <- LogBetaBinomNLL
   }
+  print("first fit")
+  
   model_Log <- mle2(minuslogl = logl, 
                     start = start_,
                     data = list(N = N_df, k = k_df, log_V = log_V_df))
-  print("first fit")
-  if(verbose){
-    print(summary(warnings()))
-  }
+  # if(verbose){
+  #   print(summary(warnings()))
+  # }
 
   if(!betabinom){
     start_ <- c(log_beta0 = as.numeric(model_Log@coef[1]),
@@ -231,6 +233,8 @@ optim_Log <- function(dataset, betabinom=FALSE, verbose = TRUE){
   }
   
   dif = 1
+  print("Optim")
+
   while(dif>tolerance) {
     old = model_Log@min
     model_Log <- mle2(minuslogl = logl, 
@@ -238,10 +242,6 @@ optim_Log <- function(dataset, betabinom=FALSE, verbose = TRUE){
                       data = list(N = N_df, k = k_df, log_V = log_V_df))
     new = model_Log@min 
     dif = abs(old - new)
-  }
-  print("Optim")
-  if(verbose){
-    print(summary(warnings()))
   }
   return(model_Log)
 }
@@ -258,13 +258,10 @@ optim_Ferg <- function(dataset, betabinom=FALSE, verbose = TRUE){
                 overdispersion = 0.46)
     logl <- FergusonBetaBinomNLL
   }
+  print("first fit")
   model_Ferg <- mle2(minuslogl = logl, 
                      start = start_,
                      data = list(N = N_df, k = k_df, log_V = log_V_df))
-  print("first fit")
-  if(verbose){
-    print(summary(warnings()))
-  }
 
   if(!betabinom){
     start_ <- c(log.theta0 = as.numeric(model_Ferg@coef[1]),
@@ -276,6 +273,7 @@ optim_Ferg <- function(dataset, betabinom=FALSE, verbose = TRUE){
   }
   
   dif = 1
+  print("Optim")
   while(dif>tolerance) {
     old = model_Ferg@min
     model_Ferg <- mle2(minuslogl = logl, 
@@ -284,10 +282,7 @@ optim_Ferg <- function(dataset, betabinom=FALSE, verbose = TRUE){
     new = model_Ferg@min 
     dif = abs(old - new)
   }
-  print("Optim")
-  if(verbose){
-    print(summary(warnings()))
-  }
+
   return(model_Ferg)
 }
 
@@ -303,13 +298,10 @@ optim_Hill <- function(dataset, betabinom=FALSE, verbose = TRUE){
                 overdispersion = 4)
     logl <- HillBetaBinomNLL
   }
+  print("first fit")
   model_Hill <- mle2(minuslogl = logl, 
                      start = start_,
                      data = list(N = N_df, k = k_df, log_V = log_V_df))
-  print("first fit")
-  if(verbose){
-    print(summary(warnings()))
-  }
 
   if(!betabinom){
     start_ <- c(log.gamma0 = as.numeric(model_Hill@coef[1]),
@@ -321,6 +313,7 @@ optim_Hill <- function(dataset, betabinom=FALSE, verbose = TRUE){
   }
   
   dif = 1
+  print("Optim")
   while(dif>tolerance) {
     old = model_Hill@min
     model_Hill <- mle2(minuslogl = logl, 
@@ -328,10 +321,6 @@ optim_Hill <- function(dataset, betabinom=FALSE, verbose = TRUE){
                        data = list(N = N_df, k = k_df, log_V = log_V_df))
     new = model_Hill@min 
     dif = abs(old - new)
-  }
-  print("Optim")
-  if(verbose){
-    print(summary(warnings()))
   }
   return(model_Hill)
 }
@@ -390,7 +379,7 @@ dose_resp_function_selection <- function(data, filename, verbose = TRUE){
 
   print("binom_Log")
   binom_Log <- optim_Log(data, verbose = verbose)
-  print("binom_Log")
+  print("betabinom_Log")
   betabinom_Log <- optim_Log(data, betabinom = T, verbose = verbose)
 
   print("binom_Ferg")

@@ -26,7 +26,7 @@ library(effects)
 library(nlstools)
 library(glmmTMB)
 library(janitor) # for clean_names
-library(writexl)
+library(writexl) # for write_xlsx
 
 ## Set Work Directory ------------------------------------------------------
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
@@ -151,7 +151,7 @@ breaks2 <- rep(breaks, 2)
 
 df_den$NHP <- factor(df_den$NHP, levels = c("Squirrel","Cyno")) # change order of legend
 
-write_xlsx(df_den,"../data/Source_Data_Fig4A.xlsx")
+# write_xlsx(df_den,"../data/Source_Data_Fig4A.xlsx")
 p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
                                linewidth = 1.3) +
   geom_point(data = df_den,
@@ -161,8 +161,8 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
   geom_line(data = pred_den, aes(x = log_V, y = pred_proba),
             color = "#006837", linewidth = 2, alpha = 0.8) +
   annotate(geom = "text", label = "LOD",
-           #color = "darkgrey",
-           size = 9,
+           color = "darkgrey",
+           size = 8,
            x = 1.57, y = 0.96) +
   scale_shape_manual(name = bquote(bold("Monkey species")),
                      values = c("Squirrel" = 16,
@@ -186,21 +186,15 @@ p_den <- ggplot() + geom_vline(xintercept = log10(21), color = "darkgrey",
   labs(x = bquote("Dengue virus titer ("*log[10]~"PFU/ml)"),
        y = "Prob mosquito infection",
        size = bquote(bold("N mosq. titered"))) + 
-  theme(axis.text = element_text(size = 30),
-        axis.title.y = element_text(size = 35,
+  theme(axis.text = element_text(size = 25),
+        axis.title.y = element_text(size = 26,
                                     margin = margin(r=20)),
-        axis.title.x = element_text(size = 35,
+        axis.title.x = element_text(size = 26,
                                     margin = margin(t=15)),
-        legend.text = element_text(size = 33),
-        legend.title = element_text(size = 33),
-        legend.position = c(0.71,0.6),
+        legend.text = element_text(size = 25),
+        legend.title = element_text(size = 26),
+        legend.position = c(0.75,0.75),
         legend.background = element_rect(color = NA, fill = NA))
-
-png("~/Documents/POSTDOC/trade_offs_NMSU/output/TropMed23/GAM_TTM_dengue.png",
-    width = 800, height = 520)
-plot(p_den)
-dev.off()
-
 
 # ZIKA ----
 ## ZIKV squirrel data -----
@@ -311,6 +305,7 @@ pred_zik <- data.frame(log_V = seq(0,6.3,length.out = 75),
 
 df_zik$NHP <- factor(df_zik$NHP, levels = c("Squirrel","Cyno")) # change order of legend
 
+# write_xlsx(df_zik,"../data/Source_Data_Fig4B.xlsx")
 p_zik <- ggplot() +   geom_vline(xintercept = log10(21), color = "darkgrey",
                                  linewidth = 1.3) +
   geom_point(data = df_zik,
@@ -354,8 +349,18 @@ p_zik <- ggplot() +   geom_vline(xintercept = log10(21), color = "darkgrey",
 p <- (p_den / p_zik)
 p <- p + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size = 23),
                                                    plot.tag.position = c(0.14,0.98))
-png(filename = "../output/figures/main/Figure_5.png",
+png(filename = "../output/figures/main/Figure_4.png",
     width = 900, height = 1200)
 print(p)
 dev.off()
+
+pdf(file = "../output/figures/main/Figure_4.pdf",
+    width = 12, height = 16)
+print(p)
+dev.off()
+
+# ggsave(filename = "../output/figures/main/Figure_5.eps",
+#        plot = p,
+#        width = 900, height = 1200, units = "px")
+
 

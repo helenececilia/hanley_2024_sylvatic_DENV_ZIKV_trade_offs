@@ -31,6 +31,7 @@ library(ggtext) # for element_markdown
 library(cowplot)
 library(magick)
 library(glmmTMB)
+library(writexl) # for write_xlsx
 
 ## Set Work Directory ------------------------------------------------------
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
@@ -652,6 +653,11 @@ my_colors <- c("Dengue virus 1" = "#2A2A2A",
                "Dengue virus 3" = "#AAAAAA",
                "Dengue virus 4" = "#D4D4D4")
 
+# write_xlsx(nguyen_pfu1_sol2,"../data/Source_Data_FigS6A.xlsx")
+# write_xlsx(nguyen_pfu2_sol2,"../data/Source_Data_FigS6C.xlsx")
+# write_xlsx(nguyen_pfu3_sol2,"../data/Source_Data_FigS6G.xlsx")
+# write_xlsx(nguyen_pfu4_sol2,"../data/Source_Data_FigS6H.xlsx")
+# write_xlsx(long_body_df,"../data/Source_Data_FigS6E.xlsx")
 
 p1n <- ggplot() + geom_line(data = pred_b[pred_b$type_exact == "nguyen1",],
                             aes(x = dose, y = resp, color = "Dengue virus 1"),
@@ -862,6 +868,11 @@ pred_l <- data.frame(dose = rep(predframe,5),
                             fit2_long_head),
                    type_exact = rep(c("zikv", "duong1", "duong2", "duong4","long2"),
                                     each = length(predframe)))
+
+# write_xlsx(duong_pfu1_sol2,"../data/Source_Data_FigS6B.xlsx")
+# write_xlsx(duong_pfu2_sol2,"../data/Source_Data_FigS6D.xlsx")
+# write_xlsx(duong_pfu4_sol2,"../data/Source_Data_FigS6I.xlsx")
+# write_xlsx(long_head_df,"../data/Source_Data_FigS6F.xlsx")
 
 # to write superscript a or b
 # "Dengue virus 2\u1D43" 
@@ -1092,6 +1103,11 @@ shapes <- c(rep(16, n_breaks), rep(6, n_breaks))
 colors <- c(rep("#0000BB", n_breaks),rep("#00DDDD", n_breaks))
 breaks2 <- rep(breaks, 2)
 
+# zikv_sq_leg$species <- "Squirrel"
+# zikv_cy_leg$species <- "Cyno"
+# zikv_leg <- rbind(zikv_sq_leg,zikv_cy_leg)
+# write_xlsx(zikv_leg,"../data/Source_Data_Fig6A.xlsx")
+
 pz <- ggplot() + 
   geom_vline(aes(xintercept = Z_sq_50, color = "Squirrel")) +
   geom_vline(aes(xintercept = Z_cy_50, color = "Cyno")) +
@@ -1113,7 +1129,7 @@ pz <- ggplot() +
   geom_point(data = zikv_cy_leg, aes(x = log_V, y = k/N, size = N,
                                  shape = "Cyno"),
              color = "#00DDDD", stroke = 1.5) +
-  # ggtitle("A") +
+  ggtitle("A") +
   theme_classic() +
   scale_x_continuous(limits = c(0,8.15),
                      expand = expansion(add = c(0.05,0.1))) +
@@ -1149,14 +1165,14 @@ pz <- ggplot() +
        size = bquote(bold("N mosq. titered"))) +
   theme_classic() +
   theme(legend.key.width = unit(1,'cm'),
-        axis.text = element_text(size = 34),
-        axis.title.x = element_text(size = 36),
-        axis.title.y = element_text(size = 36,
+        axis.text = element_text(size = 32),
+        axis.title.x = element_text(size = 34),
+        axis.title.y = element_text(size = 34,
                                     margin = margin(r = 15)),
-        legend.text = element_text(size = 34),
-        legend.title = element_text(size = 35),
+        legend.text = element_text(size = 32),
+        legend.title = element_text(size = 33),
         legend.position = "right",
-        plot.title = element_text(size = 21),
+        plot.title = element_text(size = 22),
         plot.margin = margin(t = 10, r = 15, b = 0, l = 5),
         legend.background = element_rect(color = NA, fill = NA),
         legend.spacing.y = unit(0.5, 'cm')) # works for legends with byrow = TRUE
@@ -1303,7 +1319,7 @@ p1 <- ggplot() +
   scale_fill_manual(values = my_colors[c(1,6)],
                      name = legend_title,
                      labels = c(labelD1,labelZ)) +
-  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+  labs(x = "", #bquote("Virus titer ("*log[10]~"PFU/ml)"),
        y = "Prob mosquito leg infection") +
   guides(color = guide_legend(nrow = 3, byrow = TRUE),
          fill = guide_legend(nrow = 3, byrow = TRUE)) +
@@ -1314,7 +1330,7 @@ p1 <- ggplot() +
                                     margin = margin(r = 15)),
         legend.text = element_text(size = 20),
         legend.title = element_text(size = 20),
-        legend.position = c(0.18,0.77),
+        legend.position = c(0.185,0.765),
         plot.title = element_text(size = 21),
         plot.margin = margin(t = 0, r = 15, b = 0, l = 0),
         legend.background = element_rect(color = NA, fill = NA),
@@ -1440,7 +1456,7 @@ p2d <- ggplot() +
   scale_fill_manual(values = my_colors[c(2,6)],
                      name = "",
                      labels = c(labelD2,labelZ)) +
-  labs(x = bquote("Virus titer ("*log[10]~"PFU/ml)"),
+  labs(x = "", #bquote("Virus titer ("*log[10]~"PFU/ml)"),
        y = "") +
   guides(color = guide_legend(nrow = 3, byrow = TRUE),
          fill = guide_legend(nrow = 3, byrow = TRUE)) +
@@ -1461,6 +1477,11 @@ p <- pz / wrap_elements(full = pd12) / wrap_elements(full = pd24)
 
 png(filename = "../output/figures/main/Figure_6.png",
     width = 1300, height = 1350)
+print(p)
+dev.off()
+
+cairo_pdf(file = "../output/figures/main/Figure_6.pdf",
+    width = 17.3, height = 18)
 print(p)
 dev.off()
 
@@ -1558,6 +1579,11 @@ labels <- c(breaks, rep("", n_breaks))
 shapes <- c(rep(16, n_breaks), rep(6, n_breaks))
 colors <- c(rep("#0000BB", n_breaks),rep("#00DDDD", n_breaks))
 breaks2 <- rep(breaks, 2)
+
+zikv_sq_body$species <- "Squirrel"
+zikv_cy_body$species <- "Cyno"
+zikv_body <- rbind(zikv_sq_body,zikv_cy_body)
+write_xlsx(zikv_body,"../data/Source_Data_FigS4A.xlsx")
 
 pz <- ggplot() + 
   geom_vline(aes(xintercept = Z_sq_50, color = "Squirrel")) +

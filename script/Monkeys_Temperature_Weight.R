@@ -18,6 +18,7 @@ library(lubridate)
 library(chron)
 library(glmmTMB) # inconsistency between Matrix versions / install.packages('TMB', type = 'source')
 library(DHARMa)
+library(writexl) # for write_xlsx
 
 ## Set Work Directory ------------------------------------------------------
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # set to source file location
@@ -103,6 +104,11 @@ df3$Final.Treatment <- factor(df3$Final.Treatment, levels = c("Control",
                                                               "15 Mosquitos"))
 df4$Final.Treatment <- factor(df4$Final.Treatment, levels = c("Control",
                                                               "15 Mosquitos"))
+
+# write_xlsx(df1,"../data/Source_Data_FigS1A.xlsx")
+# write_xlsx(df2,"../data/Source_Data_FigS1B.xlsx")
+# write_xlsx(df4,"../data/Source_Data_FigS1C.xlsx")
+# write_xlsx(df3,"../data/Source_Data_FigS1D.xlsx")
 
 pt1 <- ggplot(df1) + geom_line(aes(x = Study.Day, y = temp,
                                    color = Final.Treatment, group = ID),
@@ -320,6 +326,11 @@ m4 <- glmmTMB(weight/baseline ~ Final.Treatment,
               data = df4)
 simulateResiduals(m4, plot = T) # Levene test signif
 summary(m4)
+
+# write_xlsx(df1,"../data/Source_Data_FigS2A.xlsx")
+# write_xlsx(df2,"../data/Source_Data_FigS2B.xlsx")
+# write_xlsx(df4,"../data/Source_Data_FigS2C.xlsx")
+# write_xlsx(df3,"../data/Source_Data_FigS2D.xlsx")
 
 # Figure
 pw1 <- ggplot(df1) + geom_line(aes(x = Day.Post.Infection, y = weight/baseline,

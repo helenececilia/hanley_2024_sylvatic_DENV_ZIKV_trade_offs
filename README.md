@@ -9,7 +9,7 @@ author: "Hélène Cecilia"
 
 This repository contains code used in the following paper.
 
-Hanley KA, Cecilia H, Azar SR, Moehn B, Gass J, Oliveira da Silva NI, Wanqin Y, Ruimei Y, Althouse BM, Vasilakis N, Rossi SL (2023) **Immunologically mediated trade-offs shaping transmission of sylvatic dengue and Zika virus in native and novel non-human primate hosts.** *bioRxiv* <https://doi.org/10.1101/2023.06.30.547187>
+Hanley KA, Cecilia H, Azar SR, Moehn B, Gass J, Oliveira da Silva NI, Wanqin Y, Ruimei Y, Althouse BM, Vasilakis N, Rossi SL (2024) **Trade-offs shaping transmission of sylvatic dengue and Zika virus in native and novel monkey hosts.** *Nature Communications*
 
 All code contained within this repository is released under the [CRAPL v0.1 License](http://matt.might.net/articles/crapl/). Data provided in this repository are sufficient to rerun all analyses.
 
@@ -33,17 +33,19 @@ The analyses were all performed on a desktop computer (Ubuntu 22.04)
 
 -   `Dose_Delivered_by_Mosquitoes.qmd` tests if monkeys received the same number of infectious bites across experiments, as well as differences in saliva titers between mosquitoes infected with DENV and ZIKV. It then estimates dose delivered to monkeys, and compares across experiments.
 
--   `TransmissionToMosquitoes_ZIKV_DENV_Sylvatic.R` fits a generalized additive model (gam) to compute a relationship between monkeys' viral titer and probability of transmission to mosquitoes. Data from cynomolgus macaques and squirrel monkeys are aggregated. The probability of transmission is broadly defined as mosquito legs or bodies or saliva being positive. This script produces **Figure 5** from the manuscript. Model objects are saved in `output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/`.
+-   `TransmissionToMosquitoes_ZIKV_DENV_Sylvatic.R` fits a generalized additive model (gam) to compute a relationship between monkeys' viral titer and probability of transmission to mosquitoes. Data from cynomolgus macaques and squirrel monkeys are aggregated. The probability of transmission is broadly defined as mosquito legs or bodies or saliva being positive. This script produces **Figure 4** from the manuscript. Model objects are saved in `output/result_files/transmission_to_mosquitoes/GAM_zika_dengue_sylvatic/`.
 
 -   `Dose_Response_ZIKV_MonkeyToAlbopictus_vs_DENV_HumanToAegypti.qmd` performs the selection of functional forms to fit dose-response curves to ZIKV and DENV transmission data to mosquitoes (bodies or legs). It produces **Figures 6, S4, S6**. Model objects are saved in `output/result_files/transmission_to_mosquitoes/zika_sylvatic_vs_dengue_literature/`.
 
--   `Dose_Response_Functions.R` contains functions used to fit dose-response curves and select the most appropriate functional form, as well as computeing uncertainty around the curves, and estimating dose 50.
+-   `Dose_Response_Functions.R` contains functions used to fit dose-response curves and select the most appropriate functional form, as well as computing uncertainty around the curves, and estimating dose 50.
 
 ### Data folder
 
 Tables S1, S2, S3, S4 contain most of the data. The .csv files are used by the scripts, and the .xlsx version is provided as it has a separate sheet detailing column information. Temperature files provide temperature every 15 minutes. Other files are extractions of Tables S1-S4 used for easier manipulation in scripts. Although the file names refer to the experiment with the virus name, they also include control monkeys.
 
 The `literature` folder contains data from Nguyen et al. 2013 and Duong et al. 2015, extracted from the supplementary material of ten Bosch et al. 2018, as well as data from Long et al. 2019, used for comparison between ZIKV transmission from non-human primates to *Aedes albopictus* and DENV transmission from humans to *Aedes aegypti*.
+
+Source_Data.xlsx contains the data used to produce figures, with one sheet per figure (or sub-panel of a figure).
 
 ### Output folder
 
@@ -53,7 +55,7 @@ Contains figures from the manuscript (in `main`) and the supplementary informati
 
 #### Result_files subfolder
 
-Contains detailed results from analysis.
+Contains detailed results from analyses.
 
 Any questions about this code base can be directed at [helene.cecilia3\@gmail.com](mailto:helene.cecilia3@gmail.com)
 
